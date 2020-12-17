@@ -7,7 +7,6 @@ pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::Item);
     TokenStream::from(match parse_sealed(input) {
         Ok(ts) => {
-            println!("{}", ts);
             ts
         },
         Err(err) => err.to_compile_error(),
@@ -30,7 +29,7 @@ fn parse_sealed_struct(strct: syn::ItemStruct) -> syn::Result<proc_macro2::Token
     let ident = &strct.ident;
     Ok(quote!(
         #strct
-        impl private::Sealed for crate::#ident {}
+        impl private::Sealed for #ident {}
     ))
 }
 
