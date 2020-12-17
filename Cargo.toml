@@ -2,6 +2,13 @@
 name = "sealed"
 version = "0.1.0"
 authors = ["José Duarte <jmg.duarte@campus.fct.unl.pt>"]
+license = "MIT OR Apache-2.0"
+description = "Macro for sealing traits and structures"
+repository = "https://github.com/jmg-duarte/sealed-rs"
+documentation = "https://docs.rs/sealed"
+categories = ["development-tools", "rust-patterns"]
+keywords = ["proc_macro", "sealed", "future-proofing"]
+readme = "README.md"
 edition = "2018"
 
 [lib]
