@@ -1,7 +1,11 @@
+<img src="images/sealed.png" width=100 align="left">
+
 # `#[sealed]`
 
 This crate provide a convinient and simple way to implement the sealed trait pattern,
 as described in the Rust API Guidelines [[1](https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed)].
+
+
 
 ```toml
 [dependencies]
