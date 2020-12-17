@@ -1,5 +1,3 @@
-//! <img src="images/sealed.png" width=100 align="left">
-//!
 //! # `#[sealed]`
 //!
 //! [<img alt="" src="https://img.shields.io/badge/docs.rs-sealed-success?style=flat-square">](https://docs.rs/sealed)
