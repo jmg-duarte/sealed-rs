@@ -9,8 +9,9 @@ proc-macro = true
 
 [dev-dependencies]
 trybuild = { version = "1.0", features = ["diff"] }
+syn = {version = "1.0", features = ["extra-traits"]}
 
 [dependencies]
-syn = {version = "1.0", features = ["full", "parsing", "extra-traits"]}
+syn = {version = "1.0", features = ["full"]}
 quote = "1.0"
 proc-macro2 = "1.0"
