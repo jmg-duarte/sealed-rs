@@ -37,10 +37,6 @@
 //! pub struct C;
 //!
 //! impl T for C {} // compile error
-//!
-//! fn main() {
-//!     return
-//! }
 //! ```
 //!
 //! ## Details
