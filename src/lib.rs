@@ -18,7 +18,7 @@
 //!
 //! You can see a demo in [`demo/`](demo/).
 //!
-//! ```rust
+//! ```rust,compile_fail
 //! use sealed::sealed;
 //!
 //! #[sealed]
@@ -53,7 +53,7 @@
 //! // trait T {}
 //! trait T: private::Sealed {}
 //! mod private {
-//!     trait Sealed {}
+//!     pub trait Sealed {}
 //! }
 //!
 //! // #[sealed]
