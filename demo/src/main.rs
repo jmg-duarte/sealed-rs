@@ -51,7 +51,7 @@ impl Drone<Hovering> {
 
 impl Drone<Flying> {
     fn has_arrived(&self, x: f32, y: f32) -> bool {
-        return self.x == x && self.y == y;
+        (self.x - x).abs() < f32::EPSILON && (self.y - y).abs() < f32::EPSILON
     }
 
     fn fly(mut self, x: f32, y: f32) -> Drone<Hovering> {
@@ -107,32 +107,32 @@ mod drone_test {
     #[test]
     fn drone_spawns_idle() {
         let drone = Drone::<Idle>::new();
-        assert_eq!(drone.x, 0.0);
-        assert_eq!(drone.y, 0.0);
+        assert!(drone.x.abs() < f32::EPSILON);
+        assert!(drone.y.abs() < f32::EPSILON);
     }
 
     #[test]
     fn drone_takes_off_n_lands() {
         let drone = Drone::<Idle>::new();
         let drone = drone.take_off();
-        assert_eq!(drone.x, 0.0);
-        assert_eq!(drone.y, 0.0);
+        assert!(drone.x.abs() < f32::EPSILON);
+        assert!(drone.y.abs() < f32::EPSILON);
         drone.land();
     }
 
     #[test]
     fn drone_flies() {
         let drone = Drone::<Idle>::new().take_off().move_to(-5.0, -5.0).land();
-        assert_eq!(drone.x, -5.0);
-        assert_eq!(drone.y, -5.0);
+        assert!((drone.x - -5.0).abs() < f32::EPSILON);
+        assert!((drone.y - -5.0).abs() < f32::EPSILON);
     }
 
     #[test]
     fn drone_does_not_fly_idle() {
         let drone = Drone::<Idle>::new();
         // drone.move_to(10.0, 10.0); // comptime error: "move_to" is not a member of type Idle
-        assert_eq!(drone.x, 0.0);
-        assert_eq!(drone.y, 0.0);
+        assert!(drone.x.abs() < f32::EPSILON);
+        assert!(drone.y.abs() < f32::EPSILON);
     }
 }
 
