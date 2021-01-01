@@ -54,3 +54,5 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
+      - name: Format tests
+        run: rustfmt --check tests/**/*.rs
