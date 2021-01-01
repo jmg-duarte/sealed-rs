@@ -137,5 +137,5 @@ mod drone_test {
 }
 
 fn main() {
-    let drone = Drone::<Idle>::new().take_off().move_to(-5.0, -5.0).land();
+    let _drone = Drone::<Idle>::new().take_off().move_to(-5.0, -5.0).land();
 }
