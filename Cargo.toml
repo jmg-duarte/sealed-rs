@@ -11,8 +11,12 @@ keywords = ["proc_macro", "sealed", "future-proofing"]
 readme = "README.md"
 edition = "2018"
 exclude = [
-    "demo/*",
     "images/*"
+]
+
+[workspace]
+members = [
+    "demo"
 ]
 
 [lib]

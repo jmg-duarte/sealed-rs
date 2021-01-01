@@ -23,6 +23,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --workplace
 
   clippy:
     runs-on: ubuntu-latest
@@ -37,3 +38,4 @@ jobs:
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          args: --workplace
