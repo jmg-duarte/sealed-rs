@@ -70,9 +70,7 @@ use syn::{parse_macro_input, parse_quote};
 pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::Item);
     TokenStream::from(match parse_sealed(input) {
-        Ok(ts) => {
-            ts
-        },
+        Ok(ts) => ts,
         Err(err) => err.to_compile_error(),
     })
 }
