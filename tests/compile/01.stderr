@@ -1,5 +1,5 @@
 error[E0277]: the trait bound `C: Sealed` is not satisfied
-  --> $DIR/01.rs:17:6
+  --> $DIR/01.rs:16:6
    |
 11 | #[sealed]
    | --------- required by this bound in `T`
