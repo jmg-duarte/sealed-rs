@@ -55,9 +55,9 @@ impl Drone<Flying> {
     }
 
     fn fly(mut self, x: f32, y: f32) -> Drone<Hovering> {
-        self.x = x;
-        self.y = y;
         while !self.has_arrived(x, y) {
+            self.x = x;
+            self.y = y;
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
         Drone::<Hovering>::from(self)
