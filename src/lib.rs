@@ -18,7 +18,7 @@
 //!
 //! You can see a demo in [`demo/`](demo/).
 //!
-//! ```rust
+//! ```rust,compile_fail
 //! use sealed::sealed;
 //!
 //! #[sealed]
@@ -37,10 +37,6 @@
 //! pub struct C;
 //!
 //! impl T for C {} // compile error
-//!
-//! fn main() {
-//!     return
-//! }
 //! ```
 //!
 //! ## Details
@@ -57,7 +53,7 @@
 //! // trait T {}
 //! trait T: private::Sealed {}
 //! mod private {
-//!     trait Sealed {}
+//!     pub trait Sealed {}
 //! }
 //!
 //! // #[sealed]
@@ -74,9 +70,7 @@ use syn::{parse_macro_input, parse_quote};
 pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::Item);
     TokenStream::from(match parse_sealed(input) {
-        Ok(ts) => {
-            ts
-        },
+        Ok(ts) => ts,
         Err(err) => err.to_compile_error(),
     })
 }
