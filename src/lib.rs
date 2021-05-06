@@ -66,12 +66,6 @@ use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{parse_macro_input, parse_quote};
 
-macro_rules! SEAL_FORMAT {
-    () => {
-        "__seal_for_{}"
-    };
-}
-
 macro_rules! parse_quote {(
     $($code:tt)*
 ) => (
@@ -91,6 +85,15 @@ macro_rules! parse_quote {(
         ::syn::parse_quote!( $($code)* )
     })()
 )}
+
+macro_rules! build_seal {
+    ($seal:ident) => {{
+        // TODO there has to be a better way
+        use heck::SnakeCase as __heck__SnakeCase;
+        let seal_ident = $seal.to_string().to_snake_case();
+        format_ident!("__seal_for_{}", seal_ident)
+    }};
+}
 
 #[proc_macro_attribute]
 pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
@@ -125,7 +128,7 @@ fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
 // Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
 fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<proc_macro2::TokenStream> {
     let trait_ident = &item_trait.ident;
-    let seal = format_ident!(SEAL_FORMAT!(), trait_ident);
+    let seal = build_seal!(trait_ident);
     item_trait.supertraits.push(parse_quote!(#seal::Sealed));
     Ok(quote!(
         pub(crate) mod #seal {
@@ -142,12 +145,12 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<proc_macro2::Token
         // since `impl for ...` is not allowed, this path will *always* have at least length 1
         // thus both `first` and `last` are safe to unwrap
         let trait_ident = sealed_path.pop().unwrap().into_value().ident;
-
-        let seal = format_ident!(SEAL_FORMAT!(), trait_ident);
+        let seal = build_seal!(trait_ident);
         sealed_path.push(parse_quote!(#seal));
         sealed_path.push(parse_quote!(Sealed));
 
         let self_type = &item_impl.self_ty;
+
         Ok(quote! {
             impl #sealed_path for #self_type {}
             #item_impl
