@@ -96,15 +96,6 @@ fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
     }
 }
 
-// // Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
-// fn parse_sealed_struct(strct: syn::ItemStruct) -> syn::Result<proc_macro2::TokenStream> {
-//     let ident = &strct.ident;
-//     Ok(quote!(
-//         #strct
-//         impl private::Sealed for #ident {}
-//     ))
-// }
-
 // Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
 fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<proc_macro2::TokenStream> {
     let trait_ident = &item_trait.ident;
