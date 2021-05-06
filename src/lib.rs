@@ -108,11 +108,12 @@ fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
 // Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
 fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<proc_macro2::TokenStream> {
     let trait_ident = &item_trait.ident;
+    let trait_generics = &item_trait.generics;
     let seal = build_seal!(trait_ident);
-    item_trait.supertraits.push(parse_quote!(#seal::Sealed));
+    item_trait.supertraits.push(parse_quote!(#seal::Sealed #trait_generics));
     Ok(quote!(
         pub(crate) mod #seal {
-            pub trait Sealed {}
+            pub trait Sealed #trait_generics {}
         }
         #item_trait
     ))
@@ -123,7 +124,7 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<proc_macro2::Token
         let mut sealed_path = impl_trait.1.segments.clone();
         // since `impl for ...` is not allowed, this path will *always* have at least length 1
         // thus both `first` and `last` are safe to unwrap
-        let syn::PathSegment { ident, .. } = sealed_path.pop().unwrap().into_value();
+        let syn::PathSegment { ident, arguments } = sealed_path.pop().unwrap().into_value();
         let seal = build_seal!(ident);
         sealed_path.push(parse_quote!(#seal));
         sealed_path.push(parse_quote!(Sealed));
@@ -132,7 +133,7 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<proc_macro2::Token
         let trait_generics = &item_impl.generics;
 
         Ok(quote! {
-            impl #trait_generics #sealed_path for #self_type {}
+            impl #trait_generics #sealed_path #arguments for #self_type {}
             #item_impl
         })
     } else {
