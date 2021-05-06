@@ -101,7 +101,9 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<proc_macro2
     let trait_ident = &item_trait.ident;
     let trait_generics = &item_trait.generics;
     let seal = build_seal!(trait_ident);
-    item_trait.supertraits.push(parse_quote!(#seal::Sealed #trait_generics));
+    item_trait
+        .supertraits
+        .push(parse_quote!(#seal::Sealed #trait_generics));
     Ok(quote!(
         pub(crate) mod #seal {
             pub trait Sealed #trait_generics {}

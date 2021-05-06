@@ -1,8 +1,8 @@
 // Example provided in #4
 // https://github.com/jmg-duarte/sealed-rs/issues/4
 
-use sealed::sealed;
 use proc_macro2::*;
+use sealed::sealed;
 use syn::spanned::Spanned;
 
 #[sealed]

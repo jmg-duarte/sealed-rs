@@ -12,5 +12,4 @@ impl<T> Set<Option<T>> for T {}
 #[sealed]
 impl<T> Set<Option<T>> for Option<T> {}
 
-
 fn main() {}
