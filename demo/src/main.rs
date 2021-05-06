@@ -12,16 +12,16 @@ where
     state: PhantomData<State>,
 }
 
-#[sealed]
 pub struct Idle;
+#[sealed]
 impl DroneState for Idle {}
 
-#[sealed]
 pub struct Hovering;
+#[sealed]
 impl DroneState for Hovering {}
 
-#[sealed]
 pub struct Flying;
+#[sealed]
 impl DroneState for Flying {}
 
 impl Drone<Idle> {
