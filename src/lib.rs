@@ -66,26 +66,6 @@ use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{parse_macro_input, parse_quote};
 
-macro_rules! parse_quote {(
-    $($code:tt)*
-) => (
-    (|| {
-        fn type_of_some<T> (_: Option<T>)
-          -> &'static str
-        {
-            ::core::any::type_name::<T>()
-        }
-        let target_ty = None; if false { return target_ty.unwrap(); }
-        eprintln!(
-            "[{}:{}:{}:parse_quote!]\n  - ty: `{ty}`\n  - code: `{code}`",
-            file!(), line!(), column!(),
-            code = ::quote::quote!( $($code)* ),
-            ty = type_of_some(target_ty),
-        );
-        ::syn::parse_quote!( $($code)* )
-    })()
-)}
-
 macro_rules! build_seal {
     ($seal:ident) => {{
         // TODO there has to be a better way
@@ -139,7 +119,6 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<proc_macro2
 }
 
 fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<proc_macro2::TokenStream> {
-    eprintln!("{:#?}", item_impl);
     if let Some(impl_trait) = &item_impl.trait_ {
         let mut sealed_path = impl_trait.1.segments.clone();
         // since `impl for ...` is not allowed, this path will *always* have at least length 1
