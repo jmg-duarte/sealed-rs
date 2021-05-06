@@ -14,20 +14,13 @@ mod lets {
 
 pub struct A;
 
-pub struct B {
-    field_1: i32,
-}
-
-pub struct C;
+pub struct B(i32);
 
 #[sealed]
 impl lets::attempt::some::nesting::LongerSnakeCaseType for A {}
 
 #[sealed]
 impl lets::attempt::some::nesting::LongerSnakeCaseType for B {}
-
-// fails to compile
-impl lets::attempt::some::nesting::LongerSnakeCaseType for C {}
 
 fn main() {
     return;
