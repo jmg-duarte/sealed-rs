@@ -6,7 +6,7 @@ mod lets {
             pub mod nesting {
                 use sealed::sealed;
                 #[sealed]
-                pub trait LongerSnakeCaseType{}
+                pub trait LongerSnakeCaseType {}
             }
         }
     }

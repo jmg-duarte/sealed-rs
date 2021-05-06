@@ -18,5 +18,4 @@ impl<T> Set<Option<T>> for T {}
 impl<T> Set<Option<T>> for Option<T> {}
 // impl<T> private::Sealed<Option<T>> for Option<T> {}
 
-
 fn main() {}
