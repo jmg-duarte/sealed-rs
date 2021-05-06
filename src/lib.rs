@@ -62,18 +62,11 @@
 //! impl private::Sealed for A {}
 //! ```
 
-use proc_macro::TokenStream;
-use quote::{format_ident, quote};
-use syn::{parse_macro_input, parse_quote};
+use std::fmt::Display;
 
-macro_rules! build_seal {
-    ($seal:ident) => {{
-        // TODO there has to be a better way
-        use heck::SnakeCase as __heck__SnakeCase;
-        let seal_ident = $seal.to_string().to_snake_case();
-        format_ident!("__seal_for_{}", seal_ident)
-    }};
-}
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, parse_quote};
 
 #[proc_macro_attribute]
 pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
@@ -82,6 +75,28 @@ pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
         Ok(ts) => ts,
         Err(err) => err.to_compile_error(),
     })
+}
+
+// generously offered by @danielhenrymantilla aka Yandros
+fn to_snake_case(s: &'_ str) -> String {
+    let mut ret = String::with_capacity(s.len());
+    let mut first = true;
+    s.bytes().for_each(|c| {
+        if c.is_ascii_uppercase() {
+            if !first {
+                ret.push('_');
+            }
+            ret.push(c.to_ascii_lowercase() as char);
+        } else {
+            ret.push(c as char);
+        }
+        first = false;
+    });
+    ret
+}
+
+fn seal_name<D: Display>(seal: D) -> syn::Ident {
+    ::quote::format_ident!("__seal_for_{}", to_snake_case(&seal.to_string()),)
 }
 
 fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
@@ -100,7 +115,7 @@ fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
 fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<proc_macro2::TokenStream> {
     let trait_ident = &item_trait.ident;
     let trait_generics = &item_trait.generics;
-    let seal = build_seal!(trait_ident);
+    let seal = seal_name(trait_ident);
     item_trait
         .supertraits
         .push(parse_quote!(#seal::Sealed #trait_generics));
@@ -118,7 +133,7 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<proc_macro2::Token
         // since `impl for ...` is not allowed, this path will *always* have at least length 1
         // thus both `first` and `last` are safe to unwrap
         let syn::PathSegment { ident, arguments } = sealed_path.pop().unwrap().into_value();
-        let seal = build_seal!(ident);
+        let seal = seal_name(ident);
         sealed_path.push(parse_quote!(#seal));
         sealed_path.push(parse_quote!(Sealed));
 
