@@ -144,15 +144,16 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<proc_macro2::Token
         let mut sealed_path = impl_trait.1.segments.clone();
         // since `impl for ...` is not allowed, this path will *always* have at least length 1
         // thus both `first` and `last` are safe to unwrap
-        let trait_ident = sealed_path.pop().unwrap().into_value().ident;
-        let seal = build_seal!(trait_ident);
+        let syn::PathSegment { ident, .. } = sealed_path.pop().unwrap().into_value();
+        let seal = build_seal!(ident);
         sealed_path.push(parse_quote!(#seal));
         sealed_path.push(parse_quote!(Sealed));
 
         let self_type = &item_impl.self_ty;
+        let trait_generics = &item_impl.generics;
 
         Ok(quote! {
-            impl #sealed_path for #self_type {}
+            impl #trait_generics #sealed_path for #self_type {}
             #item_impl
         })
     } else {
