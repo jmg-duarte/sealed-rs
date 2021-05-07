@@ -62,8 +62,6 @@
 //! impl private::Sealed for A {}
 //! ```
 
-use std::fmt::Display;
-
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, parse_quote};
@@ -95,7 +93,7 @@ fn to_snake_case(s: &'_ str) -> String {
     ret
 }
 
-fn seal_name<D: Display>(seal: D) -> syn::Ident {
+fn seal_name<D: ::std::fmt::Display>(seal: D) -> syn::Ident {
     ::quote::format_ident!("__seal_for_{}", to_snake_case(&seal.to_string()),)
 }
 
