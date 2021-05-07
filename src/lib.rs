@@ -127,7 +127,7 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
         let trait_generics = &item_impl.generics.split_for_impl().1;
 
         Ok(quote! {
-            #[automatically_derive]
+            #[automatically_derived]
             impl #trait_generics #sealed_path #arguments for #self_type {}
             #item_impl
         })
