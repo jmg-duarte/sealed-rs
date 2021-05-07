@@ -119,10 +119,10 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
         sealed_path.push(parse_quote!(Sealed));
 
         let self_type = &item_impl.self_ty;
-        let (trait_generics, _, where_clauses) = &item_impl.generics.split_for_impl();
+        let trait_generics = &item_impl.generics.split_for_impl().1;
 
         Ok(quote! {
-            impl #trait_generics #sealed_path #arguments for #self_type #where_clauses {}
+            impl #trait_generics #sealed_path #arguments for #self_type {}
             #item_impl
         })
     } else {
