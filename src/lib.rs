@@ -66,7 +66,7 @@ use heck::SnakeCase;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse_macro_input, parse_quote};
+use syn::{ext::IdentExt, parse_macro_input, parse_quote};
 
 #[proc_macro_attribute]
 pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
@@ -94,7 +94,7 @@ fn parse_sealed(item: syn::Item) -> syn::Result<TokenStream2> {
 
 // Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
 fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<TokenStream2> {
-    let trait_ident = &item_trait.ident;
+    let trait_ident = &item_trait.ident.unraw();
     let trait_generics = &item_trait.generics;
     let seal = seal_name(trait_ident);
     item_trait
