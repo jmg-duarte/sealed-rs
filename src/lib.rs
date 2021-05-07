@@ -102,7 +102,6 @@ fn seal_name<D: Display>(seal: D) -> syn::Ident {
 fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
     match item {
         syn::Item::Impl(item_impl) => parse_sealed_impl(item_impl),
-        // syn::Item::Struct(item_struct) => parse_sealed_struct(item_struct),
         syn::Item::Trait(item_trait) => parse_sealed_trait(item_trait),
         _ => Err(syn::Error::new(
             proc_macro2::Span::call_site(),
