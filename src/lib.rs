@@ -62,6 +62,7 @@
 //! impl private::Sealed for A {}
 //! ```
 
+use heck::SnakeCase;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
@@ -76,26 +77,8 @@ pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
     })
 }
 
-// generously offered by @danielhenrymantilla aka Yandros
-fn to_snake_case(s: &'_ str) -> String {
-    let mut ret = String::with_capacity(s.len());
-    let mut first = true;
-    s.bytes().for_each(|c| {
-        if c.is_ascii_uppercase() {
-            if !first {
-                ret.push('_');
-            }
-            ret.push(c.to_ascii_lowercase() as char);
-        } else {
-            ret.push(c as char);
-        }
-        first = false;
-    });
-    ret
-}
-
 fn seal_name<D: ::std::fmt::Display>(seal: D) -> syn::Ident {
-    ::quote::format_ident!("__seal_for_{}", to_snake_case(&seal.to_string()),)
+    ::quote::format_ident!("__seal_for_{}", &seal.to_string().to_snake_case())
 }
 
 fn parse_sealed(item: syn::Item) -> syn::Result<TokenStream2> {
