@@ -10,14 +10,10 @@ categories = ["development-tools", "rust-patterns"]
 keywords = ["proc_macro", "sealed", "future-proofing"]
 readme = "README.md"
 edition = "2018"
-exclude = [
-    "images/*"
-]
+exclude = ["images/*"]
 
 [workspace]
-members = [
-    "demo"
-]
+members = ["demo"]
 
 [lib]
 proc-macro = true
