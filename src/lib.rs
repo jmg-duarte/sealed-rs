@@ -83,7 +83,7 @@ fn seal_name<D: ::std::fmt::Display>(seal: D) -> syn::Ident {
 
 fn parse_sealed(item: syn::Item) -> syn::Result<TokenStream2> {
     match item {
-        syn::Item::Impl(item_impl) => parse_sealed_impl(item_impl),
+        syn::Item::Impl(item_impl) => parse_sealed_impl(&item_impl),
         syn::Item::Trait(item_trait) => Ok(parse_sealed_trait(item_trait)),
         _ => Err(syn::Error::new(
             proc_macro2::Span::call_site(),
@@ -109,11 +109,11 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> TokenStream2 {
     )
 }
 
-fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
+fn parse_sealed_impl(item_impl: &syn::ItemImpl) -> syn::Result<TokenStream2> {
     let impl_trait = item_impl
         .trait_
         .as_ref()
-        .ok_or_else(|| syn::Error::new_spanned(&item_impl, "missing implentation trait"))?;
+        .ok_or_else(|| syn::Error::new_spanned(item_impl, "missing implentation trait"))?;
 
     let mut sealed_path = impl_trait.1.segments.clone();
 
@@ -128,7 +128,7 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
 
     // Only keep the introduced params (no bounds), since
     // the bounds may break in the `#seal` submodule.
-    let trait_generics = &item_impl.generics.split_for_impl().1;
+    let trait_generics = item_impl.generics.split_for_impl().1;
 
     Ok(quote! {
         #[automatically_derived]
