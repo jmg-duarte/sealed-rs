@@ -84,7 +84,7 @@ fn seal_name<D: ::std::fmt::Display>(seal: D) -> syn::Ident {
 fn parse_sealed(item: syn::Item) -> syn::Result<TokenStream2> {
     match item {
         syn::Item::Impl(item_impl) => parse_sealed_impl(item_impl),
-        syn::Item::Trait(item_trait) => parse_sealed_trait(item_trait),
+        syn::Item::Trait(item_trait) => Ok(parse_sealed_trait(item_trait)),
         _ => Err(syn::Error::new(
             proc_macro2::Span::call_site(),
             "expected struct or trait",
@@ -93,19 +93,19 @@ fn parse_sealed(item: syn::Item) -> syn::Result<TokenStream2> {
 }
 
 // Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
-fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<TokenStream2> {
+fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> TokenStream2 {
     let trait_ident = &item_trait.ident.unraw();
     let trait_generics = &item_trait.generics;
     let seal = seal_name(trait_ident);
     item_trait
         .supertraits
         .push(parse_quote!(#seal::Sealed #trait_generics));
-    Ok(quote!(
+    quote!(
         pub(crate) mod #seal {
             pub trait Sealed #trait_generics {}
         }
         #item_trait
-    ))
+    )
 }
 
 fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
