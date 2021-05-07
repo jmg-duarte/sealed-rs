@@ -78,7 +78,7 @@ pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 fn seal_name<D: ::std::fmt::Display>(seal: D) -> syn::Ident {
-    ::quote::format_ident!("__seal_for_{}", &seal.to_string().to_snake_case())
+    ::quote::format_ident!("__seal_{}", &seal.to_string().to_snake_case())
 }
 
 fn parse_sealed(item: syn::Item) -> syn::Result<TokenStream2> {
