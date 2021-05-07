@@ -116,7 +116,7 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
         // since `impl for ...` is not allowed, this path will *always* have at least length 1
         // thus both `first` and `last` are safe to unwrap
         let syn::PathSegment { ident, arguments } = sealed_path.pop().unwrap().into_value();
-        let seal = seal_name(ident);
+        let seal = seal_name(ident.unraw());
         sealed_path.push(parse_quote!(#seal));
         sealed_path.push(parse_quote!(Sealed));
 
