@@ -101,6 +101,7 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> TokenStream2 {
         .supertraits
         .push(parse_quote!(#seal::Sealed #trait_generics));
     quote!(
+        #[automatically_derived]
         pub(crate) mod #seal {
             pub trait Sealed #trait_generics {}
         }
@@ -111,6 +112,7 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> TokenStream2 {
 fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
     if let Some(impl_trait) = &item_impl.trait_ {
         let mut sealed_path = impl_trait.1.segments.clone();
+
         // since `impl for ...` is not allowed, this path will *always* have at least length 1
         // thus both `first` and `last` are safe to unwrap
         let syn::PathSegment { ident, arguments } = sealed_path.pop().unwrap().into_value();
@@ -119,9 +121,13 @@ fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
         sealed_path.push(parse_quote!(Sealed));
 
         let self_type = &item_impl.self_ty;
+
+        // Only keep the introduced params (no bounds), since
+        // the bounds may break in the `#seal` submodule.
         let trait_generics = &item_impl.generics.split_for_impl().1;
 
         Ok(quote! {
+            #[automatically_derive]
             impl #trait_generics #sealed_path #arguments for #self_type {}
             #item_impl
         })
