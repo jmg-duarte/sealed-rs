@@ -83,18 +83,18 @@ fn main() {
 ```rust
 use sealed::sealed;
 
-pub(crate) mod __seal_for_t {
+pub(crate) mod __seal_t {
     pub trait Sealed {}
 }
-pub trait T: __seal_for_t::Sealed {}
+pub trait T: __seal_t::Sealed {}
 
 pub struct A;
 pub struct B(i32);
 
-impl __seal_for_t::Sealed for A {}
+impl __seal_t::Sealed for A {}
 impl T for A {}
 
-impl __seal_for_t::Sealed for B {}
+impl __seal_t::Sealed for B {}
 impl T for B {}
 
 fn main() {

@@ -10,10 +10,10 @@ pub trait AsSpan {
     fn as_span(&self) -> Span;
 }
 // expands to:
-// pub trait AsSpan: __seal_for_as_span::Sealed {
+// pub trait AsSpan: __seal_as_span::Sealed {
 //     fn as_span(&self) -> Span;
 // }
-// mod __seal_for_as_span {
+// mod __seal_as_span {
 //     pub trait Sealed {}
 // }
 
@@ -27,7 +27,7 @@ impl AsSpan for Span {
 // impl AsSpan for Span {  // foreign type, cannot place #[sealed]
 //     fn as_span(&self) -> Self { *self }
 // }
-// impl __seal_for_as_span::Sealed for Span {}
+// impl __seal_as_span::Sealed for Span {}
 
 #[sealed]
 impl<T: Spanned> AsSpan for &T {
@@ -39,6 +39,6 @@ impl<T: Spanned> AsSpan for &T {
 // impl<T: Spanned> AsSpan for &T {
 //     fn as_span(&self) -> Span { self.span() }
 // }
-// impl<T: Spanned> __seal_for_as_span::Sealed for &T {}
+// impl<T: Spanned> __seal_as_span::Sealed for &T {}
 
 fn main() {}
