@@ -10,7 +10,7 @@ as described in the Rust API Guidelines [[1](https://rust-lang.github.io/api-gui
 
 ```toml
 [dependencies]
-sealed = "0.2"
+sealed = "0.2.0-rc2"
 ```
 
 ## Example
