@@ -63,6 +63,7 @@
 //! ```
 
 use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{parse_macro_input, parse_quote};
 
@@ -97,7 +98,7 @@ fn seal_name<D: ::std::fmt::Display>(seal: D) -> syn::Ident {
     ::quote::format_ident!("__seal_for_{}", to_snake_case(&seal.to_string()),)
 }
 
-fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
+fn parse_sealed(item: syn::Item) -> syn::Result<TokenStream2> {
     match item {
         syn::Item::Impl(item_impl) => parse_sealed_impl(item_impl),
         syn::Item::Trait(item_trait) => parse_sealed_trait(item_trait),
@@ -109,7 +110,7 @@ fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
 }
 
 // Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
-fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<proc_macro2::TokenStream> {
+fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<TokenStream2> {
     let trait_ident = &item_trait.ident;
     let trait_generics = &item_trait.generics;
     let seal = seal_name(trait_ident);
@@ -124,7 +125,7 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> syn::Result<proc_macro2
     ))
 }
 
-fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<proc_macro2::TokenStream> {
+fn parse_sealed_impl(item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
     if let Some(impl_trait) = &item_impl.trait_ {
         let mut sealed_path = impl_trait.1.segments.clone();
         // since `impl for ...` is not allowed, this path will *always* have at least length 1
