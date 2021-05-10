@@ -128,11 +128,11 @@ fn parse_sealed_impl(item_impl: &syn::ItemImpl) -> syn::Result<TokenStream2> {
 
     // Only keep the introduced params (no bounds), since
     // the bounds may break in the `#seal` submodule.
-    let trait_generics = item_impl.generics.split_for_impl().1;
+    let (trait_generics, _, where_clauses) = item_impl.generics.split_for_impl();
 
     Ok(quote! {
         #[automatically_derived]
-        impl #trait_generics #sealed_path #arguments for #self_type {}
+        impl #trait_generics #sealed_path #arguments for #self_type #where_clauses {}
         #item_impl
     })
 }
