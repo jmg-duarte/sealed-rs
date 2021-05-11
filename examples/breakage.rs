@@ -16,11 +16,11 @@ fn main() {
     trait Foo {}
     trait Bar {}
 
-    #[sealed(erased)]
+    #[sealed(erase)]
     trait Trait<T> where T: ?Sized + Foo{}
 
     struct Implementor {}
 
-    #[sealed(erased)]
+    #[sealed(erase)]
     impl<T: ?Sized> Trait<T> for Implementor where T: Foo + Bar {}
 }
