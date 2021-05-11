@@ -68,23 +68,45 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{ext::IdentExt, parse_macro_input, parse_quote};
 
+const TRAIT_ERASURE_ARG_IDENT: &str = "erase";
+
 #[proc_macro_attribute]
-pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn sealed(args: TokenStream, input: TokenStream) -> TokenStream {
+    let erased = parse_macro_input!(args as Option<syn::Ident>);
     let input = parse_macro_input!(input as syn::Item);
-    TokenStream::from(match parse_sealed(input) {
-        Ok(ts) => ts,
-        Err(err) => err.to_compile_error(),
-    })
+    if let Some(erased) = erased {
+        if erased != TRAIT_ERASURE_ARG_IDENT {
+            syn::Error::new_spanned(
+                erased,
+                format!(
+                    "The only accepted argument is `{}`.",
+                    TRAIT_ERASURE_ARG_IDENT
+                ),
+            )
+            .to_compile_error()
+        } else {
+            match parse_sealed(input, true) {
+                Ok(ts) => ts,
+                Err(err) => err.to_compile_error(),
+            }
+        }
+    } else {
+        match parse_sealed(input, false) {
+            Ok(ts) => ts,
+            Err(err) => err.to_compile_error(),
+        }
+    }
+    .into()
 }
 
 fn seal_name<D: ::std::fmt::Display>(seal: D) -> syn::Ident {
     ::quote::format_ident!("__seal_{}", &seal.to_string().to_snake_case())
 }
 
-fn parse_sealed(item: syn::Item) -> syn::Result<TokenStream2> {
+fn parse_sealed(item: syn::Item, erase: bool) -> syn::Result<TokenStream2> {
     match item {
         syn::Item::Impl(item_impl) => parse_sealed_impl(&item_impl),
-        syn::Item::Trait(item_trait) => Ok(parse_sealed_trait(item_trait)),
+        syn::Item::Trait(item_trait) => Ok(parse_sealed_trait(item_trait, erase)),
         _ => Err(syn::Error::new(
             proc_macro2::Span::call_site(),
             "expected struct or trait",
@@ -93,20 +115,48 @@ fn parse_sealed(item: syn::Item) -> syn::Result<TokenStream2> {
 }
 
 // Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
-fn parse_sealed_trait(mut item_trait: syn::ItemTrait) -> TokenStream2 {
+fn parse_sealed_trait(mut item_trait: syn::ItemTrait, erase: bool) -> TokenStream2 {
     let trait_ident = &item_trait.ident.unraw();
     let trait_generics = &item_trait.generics;
+    eprintln!("{:#?}", trait_generics);
     let seal = seal_name(trait_ident);
     item_trait
         .supertraits
         .push(parse_quote!(#seal::Sealed #trait_generics));
-    quote!(
-        #[automatically_derived]
-        pub(crate) mod #seal {
-            pub trait Sealed #trait_generics {}
-        }
-        #item_trait
-    )
+
+    if erase {
+        let lifetimes = trait_generics.lifetimes();
+        let const_params = trait_generics.const_params();
+        let type_params =
+            trait_generics
+                .type_params()
+                .map(|syn::TypeParam { ident, .. }| -> syn::TypeParam {
+                    parse_quote!( #ident : ?Sized )
+                });
+        let type_params2 = trait_generics
+            .type_params()
+            .map(|syn::TypeParam { ident, .. }| ident)
+            .collect::<Vec<_>>();
+        eprintln!("{:#?}", type_params2);
+        quote!(
+            #[automatically_derived]
+            pub(crate) mod #seal {
+                pub trait Sealed< #(#lifetimes ,)* #(#type_params ,)* #(#const_params ,)* > {
+                    // #(type #type_params2;)*
+                }
+            }
+            #item_trait
+        )
+    } else {
+        quote!(
+            #[automatically_derived]
+            pub(crate) mod #seal {
+                use super::*;
+                pub trait Sealed #trait_generics {}
+            }
+            #item_trait
+        )
+    }
 }
 
 fn parse_sealed_impl(item_impl: &syn::ItemImpl) -> syn::Result<TokenStream2> {
