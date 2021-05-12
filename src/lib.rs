@@ -75,7 +75,12 @@ pub fn sealed(args: TokenStream, input: TokenStream) -> TokenStream {
     let erased = parse_macro_input!(args as Option<syn::Ident>);
     let input = parse_macro_input!(input as syn::Item);
     if let Some(erased) = erased {
-        if erased != TRAIT_ERASURE_ARG_IDENT {
+        if erased == TRAIT_ERASURE_ARG_IDENT {
+            match parse_sealed(input, true) {
+                Ok(ts) => ts,
+                Err(err) => err.to_compile_error(),
+            }
+        } else {
             syn::Error::new_spanned(
                 erased,
                 format!(
@@ -84,11 +89,6 @@ pub fn sealed(args: TokenStream, input: TokenStream) -> TokenStream {
                 ),
             )
             .to_compile_error()
-        } else {
-            match parse_sealed(input, true) {
-                Ok(ts) => ts,
-                Err(err) => err.to_compile_error(),
-            }
         }
     } else {
         match parse_sealed(input, false) {
@@ -118,19 +118,20 @@ fn parse_sealed(item: syn::Item, erase: bool) -> syn::Result<TokenStream2> {
 fn parse_sealed_trait(mut item_trait: syn::ItemTrait, erase: bool) -> TokenStream2 {
     let trait_ident = &item_trait.ident.unraw();
     let trait_generics = &item_trait.generics;
-    eprintln!("{:#?}", trait_generics);
     let seal = seal_name(trait_ident);
 
     let type_params = trait_generics
         .type_params()
-        .map(|syn::TypeParam { ident, .. }| ident);
+        .map(|syn::TypeParam { ident, .. }| -> syn::TypeParam { parse_quote!( #ident ) });
+
     item_trait
         .supertraits
-        .push(parse_quote!(#seal::Sealed< #(#type_params, )*>));
+        .push(parse_quote!(#seal::Sealed <#(#type_params, )*>));
 
     if erase {
         let lifetimes = trait_generics.lifetimes();
         let const_params = trait_generics.const_params();
+
         let type_params =
             trait_generics
                 .type_params()
