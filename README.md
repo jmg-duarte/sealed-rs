@@ -45,6 +45,13 @@ fn main() {
 }
 ```
 
+## Attributes
+
+This is the list of attributes that can be used along `#[sealed]`:
+- `#[sealed]`: the main attribute macro, without attribute parameters.
+- `#[sealed(erase)]`: this option turns on bound erasure. This is useful when using the `#[sealed]` macro inside a function.
+For an example, see [`bound-erasure-fn`](tests/pass/08-bound-erasure-fn.rs).
+
 ## Details
 
 The `#[sealed]` attribute can be attached to either a `trait` or an `impl`.
