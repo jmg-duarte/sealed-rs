@@ -120,9 +120,13 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, erase: bool) -> TokenStrea
     let trait_generics = &item_trait.generics;
     eprintln!("{:#?}", trait_generics);
     let seal = seal_name(trait_ident);
+
+    let type_params = trait_generics
+        .type_params()
+        .map(|syn::TypeParam { ident, .. }| ident);
     item_trait
         .supertraits
-        .push(parse_quote!(#seal::Sealed #trait_generics));
+        .push(parse_quote!(#seal::Sealed< #(#type_params, )*>));
 
     if erase {
         let lifetimes = trait_generics.lifetimes();
@@ -133,17 +137,11 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, erase: bool) -> TokenStrea
                 .map(|syn::TypeParam { ident, .. }| -> syn::TypeParam {
                     parse_quote!( #ident : ?Sized )
                 });
-        let type_params2 = trait_generics
-            .type_params()
-            .map(|syn::TypeParam { ident, .. }| ident)
-            .collect::<Vec<_>>();
-        eprintln!("{:#?}", type_params2);
+
         quote!(
             #[automatically_derived]
             pub(crate) mod #seal {
-                pub trait Sealed< #(#lifetimes ,)* #(#type_params ,)* #(#const_params ,)* > {
-                    // #(type #type_params2;)*
-                }
+                pub trait Sealed< #(#lifetimes ,)* #(#type_params ,)* #(#const_params ,)* > {}
             }
             #item_trait
         )
