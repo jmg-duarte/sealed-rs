@@ -1,5 +1,3 @@
-#![feature(associated_type_bounds)]
-
 use sealed::sealed;
 
 fn main() {
