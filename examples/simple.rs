@@ -1,19 +1,15 @@
 use sealed::sealed;
 
 #[sealed]
+pub trait T {}
+
 pub struct A;
-#[sealed]
-pub struct B {
-    field_1: i32,
-}
-pub struct C;
+pub struct B(i32);
 
 #[sealed]
-trait T {}
-
 impl T for A {}
+#[sealed]
 impl T for B {}
-impl T for C {}
 
 fn main() {
     return;

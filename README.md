@@ -10,7 +10,7 @@ as described in the Rust API Guidelines [[1](https://rust-lang.github.io/api-gui
 
 ```toml
 [dependencies]
-sealed = "0.1"
+sealed = "0.2.0-rc3"
 ```
 
 ## Example
@@ -18,7 +18,7 @@ sealed = "0.1"
 In the following code structs `A` and `B` implement the sealed trait `T`,
 the `C` struct, which is not sealed, will error during compilation.
 
-You can see a demo in [`demo/`](demo/).
+Examples are available in [`examples/`](examples/), you can also see a demo in [`demo/`](demo/).
 
 ```rust
 use sealed::sealed;
@@ -26,14 +26,14 @@ use sealed::sealed;
 #[sealed]
 trait T {}
 
-#[sealed]
 pub struct A;
 
+#[sealed]
 impl T for A {}
 
-#[sealed]
 pub struct B;
 
+#[sealed]
 impl T for B {}
 
 pub struct C;
@@ -45,25 +45,66 @@ fn main() {
 }
 ```
 
+## Attributes
+
+This is the list of attributes that can be used along `#[sealed]`:
+- `#[sealed]`: the main attribute macro, without attribute parameters.
+- `#[sealed(erase)]`: this option turns on bound erasure. This is useful when using the `#[sealed]` macro inside a function.
+For an example, see [`bound-erasure-fn`](tests/pass/08-bound-erasure-fn.rs).
+
 ## Details
 
-The macro generates a `private` module when attached to a `trait`
-(this raises the limitation that the `#[sealed]` macro can only be added to a single trait per module),
-when attached to a `struct` the generated code simply implements the sealed trait for the respective structure.
+The `#[sealed]` attribute can be attached to either a `trait` or an `impl`.
+It supports:
+- Several traits per module
+- Generic parameters
+- Foreign types
+- Blanket `impl`s
 
 
-### Expansion
+## Expansion
+
+### Input
 
 ```rust
-// #[sealed]
-// trait T {}
-trait T: private::Sealed {}
-mod private {
-    trait Sealed {}
-}
+use sealed::sealed;
 
-// #[sealed]
-// pub struct A;
+#[sealed]
+pub trait T {}
+
 pub struct A;
-impl private::Sealed for A {}
+pub struct B(i32);
+
+#[sealed]
+impl T for A {}
+#[sealed]
+impl T for B {}
+
+fn main() {
+    return;
+}
+```
+
+### Expanded
+
+```rust
+use sealed::sealed;
+
+pub(crate) mod __seal_t {
+    pub trait Sealed {}
+}
+pub trait T: __seal_t::Sealed {}
+
+pub struct A;
+pub struct B(i32);
+
+impl __seal_t::Sealed for A {}
+impl T for A {}
+
+impl __seal_t::Sealed for B {}
+impl T for B {}
+
+fn main() {
+    return;
+}
 ```

@@ -62,23 +62,51 @@
 //! impl private::Sealed for A {}
 //! ```
 
+use heck::SnakeCase;
 use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse_macro_input, parse_quote};
+use syn::{ext::IdentExt, parse_macro_input, parse_quote};
+
+const TRAIT_ERASURE_ARG_IDENT: &str = "erase";
 
 #[proc_macro_attribute]
-pub fn sealed(_args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn sealed(args: TokenStream, input: TokenStream) -> TokenStream {
+    let erased = parse_macro_input!(args as Option<syn::Ident>);
     let input = parse_macro_input!(input as syn::Item);
-    TokenStream::from(match parse_sealed(input) {
-        Ok(ts) => ts,
-        Err(err) => err.to_compile_error(),
-    })
+    if let Some(erased) = erased {
+        if erased == TRAIT_ERASURE_ARG_IDENT {
+            match parse_sealed(input, true) {
+                Ok(ts) => ts,
+                Err(err) => err.to_compile_error(),
+            }
+        } else {
+            syn::Error::new_spanned(
+                erased,
+                format!(
+                    "The only accepted argument is `{}`.",
+                    TRAIT_ERASURE_ARG_IDENT
+                ),
+            )
+            .to_compile_error()
+        }
+    } else {
+        match parse_sealed(input, false) {
+            Ok(ts) => ts,
+            Err(err) => err.to_compile_error(),
+        }
+    }
+    .into()
 }
 
-fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
+fn seal_name<D: ::std::fmt::Display>(seal: D) -> syn::Ident {
+    ::quote::format_ident!("__seal_{}", &seal.to_string().to_snake_case())
+}
+
+fn parse_sealed(item: syn::Item, erase: bool) -> syn::Result<TokenStream2> {
     match item {
-        syn::Item::Struct(item_struct) => parse_sealed_struct(item_struct),
-        syn::Item::Trait(item_trait) => parse_sealed_trait(item_trait),
+        syn::Item::Impl(item_impl) => parse_sealed_impl(&item_impl),
+        syn::Item::Trait(item_trait) => Ok(parse_sealed_trait(item_trait, erase)),
         _ => Err(syn::Error::new(
             proc_macro2::Span::call_site(),
             "expected struct or trait",
@@ -87,21 +115,73 @@ fn parse_sealed(item: syn::Item) -> syn::Result<proc_macro2::TokenStream> {
 }
 
 // Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
-fn parse_sealed_struct(strct: syn::ItemStruct) -> syn::Result<proc_macro2::TokenStream> {
-    let ident = &strct.ident;
-    Ok(quote!(
-        #strct
-        impl private::Sealed for #ident {}
-    ))
+fn parse_sealed_trait(mut item_trait: syn::ItemTrait, erase: bool) -> TokenStream2 {
+    let trait_ident = &item_trait.ident.unraw();
+    let trait_generics = &item_trait.generics;
+    let seal = seal_name(trait_ident);
+
+    let type_params = trait_generics
+        .type_params()
+        .map(|syn::TypeParam { ident, .. }| -> syn::TypeParam { parse_quote!( #ident ) });
+
+    item_trait
+        .supertraits
+        .push(parse_quote!(#seal::Sealed <#(#type_params, )*>));
+
+    if erase {
+        let lifetimes = trait_generics.lifetimes();
+        let const_params = trait_generics.const_params();
+
+        let type_params =
+            trait_generics
+                .type_params()
+                .map(|syn::TypeParam { ident, .. }| -> syn::TypeParam {
+                    parse_quote!( #ident : ?Sized )
+                });
+
+        quote!(
+            #[automatically_derived]
+            pub(crate) mod #seal {
+                pub trait Sealed< #(#lifetimes ,)* #(#type_params ,)* #(#const_params ,)* > {}
+            }
+            #item_trait
+        )
+    } else {
+        quote!(
+            #[automatically_derived]
+            pub(crate) mod #seal {
+                use super::*;
+                pub trait Sealed #trait_generics {}
+            }
+            #item_trait
+        )
+    }
 }
 
-// Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
-fn parse_sealed_trait(mut trt: syn::ItemTrait) -> syn::Result<proc_macro2::TokenStream> {
-    trt.supertraits.push(parse_quote!(private::Sealed));
-    Ok(quote!(
-        #trt
-        mod private {
-            pub trait Sealed {}
-        }
-    ))
+fn parse_sealed_impl(item_impl: &syn::ItemImpl) -> syn::Result<TokenStream2> {
+    let impl_trait = item_impl
+        .trait_
+        .as_ref()
+        .ok_or_else(|| syn::Error::new_spanned(item_impl, "missing implentation trait"))?;
+
+    let mut sealed_path = impl_trait.1.segments.clone();
+
+    // since `impl for ...` is not allowed, this path will *always* have at least length 1
+    // thus both `first` and `last` are safe to unwrap
+    let syn::PathSegment { ident, arguments } = sealed_path.pop().unwrap().into_value();
+    let seal = seal_name(ident.unraw());
+    sealed_path.push(parse_quote!(#seal));
+    sealed_path.push(parse_quote!(Sealed));
+
+    let self_type = &item_impl.self_ty;
+
+    // Only keep the introduced params (no bounds), since
+    // the bounds may break in the `#seal` submodule.
+    let (trait_generics, _, where_clauses) = item_impl.generics.split_for_impl();
+
+    Ok(quote! {
+        #[automatically_derived]
+        impl #trait_generics #sealed_path #arguments for #self_type #where_clauses {}
+        #item_impl
+    })
 }
