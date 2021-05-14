@@ -25,6 +25,7 @@ pub struct Flying;
 impl DroneState for Flying {}
 
 impl Drone<Idle> {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             state: PhantomData,
@@ -33,16 +34,25 @@ impl Drone<Idle> {
         }
     }
 
+    #[must_use]
     pub fn take_off(self) -> Drone<Hovering> {
         Drone::<Hovering>::from(self)
     }
 }
 
+impl Default for Drone<Idle> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Drone<Hovering> {
+    #[must_use]
     fn land(self) -> Drone<Idle> {
         Drone::<Idle>::from(self)
     }
 
+    #[must_use]
     fn move_to(self, x: f32, y: f32) -> Drone<Hovering> {
         let drone = Drone::<Flying>::from(self);
         drone.fly(x, y)
@@ -54,6 +64,7 @@ impl Drone<Flying> {
         (self.x - x).abs() < f32::EPSILON && (self.y - y).abs() < f32::EPSILON
     }
 
+    #[must_use]
     fn fly(mut self, x: f32, y: f32) -> Drone<Hovering> {
         while !self.has_arrived(x, y) {
             self.x = x;
