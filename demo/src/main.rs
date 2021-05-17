@@ -131,7 +131,7 @@ mod drone_test {
         let drone = drone.take_off();
         assert!(drone.x.abs() < f32::EPSILON);
         assert!(drone.y.abs() < f32::EPSILON);
-        drone.land();
+        let _ = drone.land();
     }
 
     #[test]
