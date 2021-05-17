@@ -109,7 +109,7 @@ fn parse_sealed(item: syn::Item, erase: bool) -> syn::Result<TokenStream2> {
         syn::Item::Trait(item_trait) => Ok(parse_sealed_trait(item_trait, erase)),
         _ => Err(syn::Error::new(
             proc_macro2::Span::call_site(),
-            "expected struct or trait",
+            "expected impl or trait",
         )),
     }
 }
