@@ -19,6 +19,4 @@ impl T1 for A {}
 #[sealed]
 impl T1 for B {}
 
-fn main() {
-    return;
-}
+fn main() {}

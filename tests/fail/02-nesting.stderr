@@ -1,8 +1,8 @@
 error[E0277]: the trait bound `C: Sealed` is not satisfied
   --> $DIR/02-nesting.rs:26:6
    |
-8  |                 #[sealed]
-   |                 --------- required by this bound in `T`
+8  |                 #[sealed(pub(crate))]
+   |                 --------------------- required by this bound in `T`
 9  |                 pub trait T {}
    |                           - required by a bound in this
 ...

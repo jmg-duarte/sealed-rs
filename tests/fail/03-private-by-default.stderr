@@ -1,0 +1,12 @@
+error[E0603]: module `__seal_t` is private
+  --> $DIR/03-private-by-default.rs:17:1
+   |
+17 | #[sealed]
+   | ^^^^^^^^^ private module
+   |
+note: the module `__seal_t` is defined here
+  --> $DIR/03-private-by-default.rs:8:17
+   |
+8  |                 #[sealed]
+   |                 ^^^^^^^^^
+   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)

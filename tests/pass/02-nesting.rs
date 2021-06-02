@@ -5,7 +5,7 @@ mod lets {
         pub mod some {
             pub mod nesting {
                 use sealed::sealed;
-                #[sealed]
+                #[sealed(pub(in super::super::super::super))]
                 pub trait T {}
             }
         }
@@ -24,6 +24,4 @@ impl lets::attempt::some::nesting::T for A {}
 #[sealed]
 impl lets::attempt::some::nesting::T for B {}
 
-fn main() {
-    return;
-}
+fn main() {}

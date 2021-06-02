@@ -5,7 +5,7 @@ mod lets {
         pub mod some {
             pub mod nesting {
                 use sealed::sealed;
-                #[sealed(pub(crate))]
+                #[sealed(pub)]
                 pub trait T {}
             }
         }
@@ -13,16 +13,8 @@ mod lets {
 }
 
 pub struct A;
-pub struct B {
-    field_1: i32,
-}
-pub struct C;
 
 #[sealed]
 impl lets::attempt::some::nesting::T for A {}
-#[sealed]
-impl lets::attempt::some::nesting::T for B {}
-// fails to compile
-impl lets::attempt::some::nesting::T for C {}
 
 fn main() {}
