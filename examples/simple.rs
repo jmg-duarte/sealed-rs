@@ -11,6 +11,4 @@ impl T for A {}
 #[sealed]
 impl T for B {}
 
-fn main() {
-    return;
-}
+fn main() {}

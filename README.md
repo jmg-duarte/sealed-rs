@@ -39,10 +39,6 @@ impl T for B {}
 pub struct C;
 
 impl T for C {} // compile error
-
-fn main() {
-    return
-}
 ```
 
 ## Arguments
@@ -80,10 +76,6 @@ pub struct B(i32);
 impl T for A {}
 #[sealed]
 impl T for B {}
-
-fn main() {
-    return;
-}
 ```
 
 ### Expanded
@@ -104,8 +96,4 @@ impl T for A {}
 
 impl __seal_t::Sealed for B {}
 impl T for B {}
-
-fn main() {
-    return;
-}
 ```
