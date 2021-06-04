@@ -1,0 +1,20 @@
+error: `pub` visibility breaks the seal as allows to use it outside its crate.
+Consider tightening the visibility (e.g. `pub(crate)`) if you actually need sealing.
+ --> $DIR/04-no-full-pub.rs:8:26
+  |
+8 |                 #[sealed(pub)]
+  |                          ^^^
+
+error[E0433]: failed to resolve: could not find `__seal_t` in `nesting`
+  --> $DIR/04-no-full-pub.rs:17:1
+   |
+17 | #[sealed]
+   | ^^^^^^^^^ could not find `__seal_t` in `nesting`
+   |
+   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0405]: cannot find trait `T` in module `lets::attempt::some::nesting`
+  --> $DIR/04-no-full-pub.rs:18:36
+   |
+18 | impl lets::attempt::some::nesting::T for A {}
+   |                                    ^ not found in `lets::attempt::some::nesting`

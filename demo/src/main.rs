@@ -1,5 +1,7 @@
-use sealed::sealed;
 use std::marker::PhantomData;
+
+use sealed::sealed;
+
 #[sealed]
 pub trait DroneState {}
 

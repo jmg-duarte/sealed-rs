@@ -19,6 +19,4 @@ impl T for B {}
 
 impl T for C {}
 
-fn main() {
-    return;
-}
+fn main() {}

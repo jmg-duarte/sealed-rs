@@ -10,7 +10,7 @@ as described in the Rust API Guidelines [[1](https://rust-lang.github.io/api-gui
 
 ```toml
 [dependencies]
-sealed = "0.2.1"
+sealed = "0.3"
 ```
 
 ## Example
@@ -39,18 +39,15 @@ impl T for B {}
 pub struct C;
 
 impl T for C {} // compile error
-
-fn main() {
-    return
-}
 ```
 
-## Attributes
+## Arguments
 
-This is the list of attributes that can be used along `#[sealed]`:
-- `#[sealed]`: the main attribute macro, without attribute parameters.
-- `#[sealed(erase)]`: this option turns on bound erasure. This is useful when using the `#[sealed]` macro inside a function.
-For an example, see [`bound-erasure-fn`](tests/pass/08-bound-erasure-fn.rs).
+This is the list of arguments that can be used in a `#[sealed]` attribute:
+
+- `#[sealed(erase)]`: turns on trait bounds erasure. This is useful when using the `#[sealed]` macro inside a function. For an example, see [`bound-erasure-fn`](examples/bound-erasure-fn.rs) example.
+  
+- `#[sealed(pub(crate))]` or `#[sealed(pub(in some::path))]`: allows to tune visibility of the generated sealing module (the default one is private). This useful when the trait and its impls are defined in different modules. For an example, see [`nesting`](examples/nesting.rs) example. **Notice**, that just `pub` is disallowed as breaks the whole idea of sealing.
 
 ## Details
 
@@ -79,10 +76,6 @@ pub struct B(i32);
 impl T for A {}
 #[sealed]
 impl T for B {}
-
-fn main() {
-    return;
-}
 ```
 
 ### Expanded
@@ -103,8 +96,4 @@ impl T for A {}
 
 impl __seal_t::Sealed for B {}
 impl T for B {}
-
-fn main() {
-    return;
-}
 ```

@@ -5,7 +5,7 @@ mod lets {
         pub mod some {
             pub mod nesting {
                 use sealed::sealed;
-                #[sealed]
+                #[sealed(pub(crate))]
                 pub trait LongerSnakeCaseType {}
             }
         }
@@ -22,6 +22,4 @@ impl lets::attempt::some::nesting::LongerSnakeCaseType for A {}
 #[sealed]
 impl lets::attempt::some::nesting::LongerSnakeCaseType for B {}
 
-fn main() {
-    return;
-}
+fn main() {}
