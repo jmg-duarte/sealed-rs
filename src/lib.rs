@@ -260,7 +260,10 @@ impl Parse for TraitArguments {
                     if matches!(out.visibility, syn::Visibility::Public(_)) {
                         return Err(syn::Error::new(
                             out.visibility.span(),
-                            "seal with `pub` visibility is nonsense",
+                            "`pub` visibility breaks the seal as allows to use \
+                             it outside its crate.\n\
+                             Consider tightening the visibility (e.g. \
+                             `pub(crate)`) if you actually need sealing.",
                         ));
                     }
                 }
