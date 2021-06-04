@@ -79,8 +79,9 @@
 //!
 //! ### `pub(crate)` or `pub(in some::path)`
 //!
-//! Allows to tune visibility of the generated sealing module. This useful when
-//! the trait and its impls are defined in different modules.
+//! Allows to tune visibility of the generated sealing module (the default one
+//! is private). This useful when the trait and its impls are defined in
+//! different modules.
 //!
 //! ```rust
 //! # use sealed::sealed;
