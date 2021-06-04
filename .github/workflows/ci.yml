@@ -7,12 +7,11 @@ on:
 
 jobs:
   tests:
+    name: Rust ${{ matrix.rust }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust:
-          - stable
-          - nightly
+        rust: [stable]
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -26,21 +25,17 @@ jobs:
           args: --workspace
 
   clippy:
+    name: Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          components: clippy
-          toolchain: stable
-          override: true
-          profile: minimal
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --workspace
+      - uses: dtolnay/rust-toolchain@clippy
+      - run: cargo clippy -- -Dclippy::all
+      - run: cargo clippy --tests -- -Dclippy::all
+      - run: cargo clippy --examples -- -Dclippy::all
 
   rustfmt:
+    name: Rustfmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
