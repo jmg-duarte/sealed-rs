@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [stable]
+        rust: [1.50.0]
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -27,23 +27,34 @@ jobs:
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: dtolnay/rust-toolchain@clippy
-      - run: cargo clippy -- -Dclippy::all
-      - run: cargo clippy --tests -- -Dclippy::all
-      - run: cargo clippy --examples -- -Dclippy::all
-
-  rustfmt:
-    name: Rustfmt
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [1.50.0]
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
-          override: true
           profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features --examples --tests
+
+  rustfmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [1.50.0]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
           components: rustfmt
       - uses: actions-rs/cargo@v1
         with:
