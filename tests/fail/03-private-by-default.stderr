@@ -9,4 +9,4 @@ note: the module `__seal_t` is defined here
    |
 8  |                 #[sealed]
    |                 ^^^^^^^^^
-   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the attribute macro `sealed` (in Nightly builds, run with -Z macro-backtrace for more info)

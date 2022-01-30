@@ -150,13 +150,10 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
     let seal = seal_name(trait_ident);
     let vis = &args.visibility;
 
-    let type_params = trait_generics
-        .type_params()
-        .map(|syn::TypeParam { ident, .. }| -> syn::TypeParam { parse_quote!( #ident ) });
-
+    let (_, ty_generics, where_clause) = trait_generics.split_for_impl();
     item_trait
         .supertraits
-        .push(parse_quote!( #seal::Sealed <#(#type_params, )*> ));
+        .push(parse_quote!( #seal::Sealed #ty_generics ));
 
     let mod_code = if args.erased {
         let lifetimes = trait_generics.lifetimes();
@@ -172,9 +169,11 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
             pub trait Sealed< #(#lifetimes ,)* #(#type_params ,)* #(#const_params ,)* > {}
         }
     } else {
+        // `trait_generics` does not output its where clause when tokenized (due
+        // to supertraits in the middle). So we output them separately.
         quote! {
             use super::*;
-            pub trait Sealed #trait_generics {}
+            pub trait Sealed #trait_generics #where_clause {}
         }
     };
 
