@@ -14,12 +14,6 @@ as described in the Rust API Guidelines [[1](https://rust-lang.github.io/api-gui
 sealed = "0.4"
 ```
 
-`#[sealed]` supports:
-- Several traits per module
-- Generic parameters (including lifetimes & const-generics)
-- Foreign types
-- Blanket `impl`s
-
 ## Example
 
 In the following code structs `A` and `B` implement the sealed trait `T`,
