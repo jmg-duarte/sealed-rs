@@ -1,14 +1,18 @@
 use sealed::sealed;
 
 #[sealed]
-pub trait FromArray<T, const N: usize> {
+pub trait FromArray<T: Copy, const N: usize> {
     fn from(arr: [T; N]) -> Self;
 }
 
 #[sealed]
-impl<T, const N: usize> FromArray<T, N> for Vec<T> {
+impl<T: Copy, const N: usize> FromArray<T, N> for Vec<T> {
     fn from(arr: [T; N]) -> Self {
-        IntoIterator::into_iter(arr).collect()
+        let mut v = Vec::with_capacity(N);
+        for i in 0..N {
+            v[i] = arr[i];
+        }
+        v
     }
 }
 

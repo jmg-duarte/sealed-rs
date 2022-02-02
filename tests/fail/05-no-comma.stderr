@@ -1,11 +1,11 @@
 error: expected followed by `,`
- --> $DIR/05-no-comma.rs:8:26
+ --> tests/fail/05-no-comma.rs:8:26
   |
 8 |                 #[sealed(erase pub(crate))]
   |                          ^^^^^
 
 error[E0433]: failed to resolve: could not find `__seal_t` in `nesting`
-  --> $DIR/05-no-comma.rs:17:1
+  --> tests/fail/05-no-comma.rs:17:1
    |
 17 | #[sealed]
    | ^^^^^^^^^ could not find `__seal_t` in `nesting`
@@ -13,7 +13,7 @@ error[E0433]: failed to resolve: could not find `__seal_t` in `nesting`
    = note: this error originates in the attribute macro `sealed` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0405]: cannot find trait `T` in module `lets::attempt::some::nesting`
-  --> $DIR/05-no-comma.rs:18:36
+  --> tests/fail/05-no-comma.rs:18:36
    |
 18 | impl lets::attempt::some::nesting::T for A {}
    |                                    ^ not found in `lets::attempt::some::nesting`
