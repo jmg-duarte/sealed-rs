@@ -1,17 +1,14 @@
 error[E0277]: the trait bound `C: Sealed` is not satisfied
-  --> tests/fail/01-general.rs:20:12
+  --> tests/fail/01-general.rs:20:6
    |
 20 | impl T for C {}
-   |            ^ the trait `Sealed` is not implemented for `C`
+   |      ^ the trait `Sealed` is not implemented for `C`
    |
-   = help: the following other types implement trait `Sealed`:
-             A
-             B
 note: required by a bound in `T`
   --> tests/fail/01-general.rs:11:1
    |
 11 | #[sealed]
    | ^^^^^^^^^ required by this bound in `T`
 12 | trait T {}
-   |       - required by a bound in this trait
+   |       - required by a bound in this
    = note: this error originates in the attribute macro `sealed` (in Nightly builds, run with -Z macro-backtrace for more info)
