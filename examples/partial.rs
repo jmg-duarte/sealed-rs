@@ -22,9 +22,21 @@ pub struct User {
 	age: u8,
 }
 
-pub struct AImpl;
+pub struct Impl;
 
 #[sealed]
-impl A for AImpl {}
+impl A for Impl {}
+
+#[sealed]
+pub trait B {
+	#[seal(callable)]
+	fn no_default(email: Email);
+}
+
+#[sealed]
+impl B for Impl {
+	#[seal(callable)]
+	fn no_default(_email: Email) {}
+}
 
 fn main() {}

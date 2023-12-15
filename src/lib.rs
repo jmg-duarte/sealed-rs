@@ -134,7 +134,7 @@ use syn::{
 #[proc_macro_attribute]
 pub fn sealed(args: TokenStream, input: TokenStream) -> TokenStream {
 	match parse_macro_input!(input) {
-		syn::Item::Impl(item_impl) => parse_sealed_impl(&item_impl),
+		syn::Item::Impl(mut item_impl) => parse_sealed_impl(&mut item_impl),
 		syn::Item::Trait(item_trait) => {
 			Ok(parse_sealed_trait(item_trait, parse_macro_input!(args)))
 		}
@@ -160,7 +160,7 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
 
 	for item in &mut item_trait.items {
 		if let syn::TraitItem::Fn(item) = item {
-			match parse_function_definition(trait_ident.clone(), item) {
+			match parse_function_definition(trait_ident, item) {
 				Ok(Some(wrapper)) => wrappers.push(wrapper.into()),
 				Ok(None) => {}
 				Err(err) => {
@@ -209,11 +209,13 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
 	}
 }
 
-fn parse_sealed_impl(item_impl: &syn::ItemImpl) -> syn::Result<TokenStream2> {
+fn parse_sealed_impl(item_impl: &mut syn::ItemImpl) -> syn::Result<TokenStream2> {
 	let impl_trait = item_impl
 		.trait_
 		.as_ref()
-		.ok_or_else(|| syn::Error::new_spanned(item_impl, "missing implementation trait"))?;
+		.ok_or_else(|| {
+			syn::Error::new_spanned(item_impl.clone(), "missing implementation trait")
+		})?;
 
 	let mut sealed_path = impl_trait.1.segments.clone();
 
@@ -234,6 +236,12 @@ fn parse_sealed_impl(item_impl: &syn::ItemImpl) -> syn::Result<TokenStream2> {
 	let (trait_generics, _, where_clauses) = item_impl
 		.generics
 		.split_for_impl();
+
+	for item in &mut item_impl.items {
+		if let syn::ImplItem::Fn(item) = item {
+			parse_function_implementation(&ident, item)?;
+		}
+	}
 
 	Ok(quote! {
 		#[automatically_derived]
@@ -260,7 +268,7 @@ fn seal_function_name<D: fmt::Display>(seal: D) -> syn::Ident {
 /// Seal a specific function (to avoid people overwriting behaviour of
 /// specific functions, or even calling them)
 fn parse_function_definition(
-	trait_ident: syn::Ident,
+	trait_ident: &syn::Ident,
 	function: &mut syn::TraitItemFn,
 ) -> Result<Option<syn::TraitItemFn>, syn::Error> {
 	let Some(attr) = function
@@ -277,7 +285,7 @@ fn parse_function_definition(
 		.retain(|x| x != &attr);
 
 	let wrapper_sig = function.sig.clone();
-	let seal = seal_name(trait_ident.clone());
+	let seal = seal_name(trait_ident);
 
 	function
 		.sig
@@ -293,7 +301,7 @@ fn parse_function_definition(
 	let mut value = None;
 
 	if input.callable {
-		function.sig.ident = seal_function_name(function.sig.ident.clone());
+		function.sig.ident = seal_function_name(&function.sig.ident);
 		let inner_name = &function.sig.ident;
 
 		let args = wrapper_sig
@@ -312,6 +320,43 @@ fn parse_function_definition(
 		}));
 	}
 	Ok(value)
+}
+
+fn parse_function_implementation(
+	trait_ident: &syn::Ident,
+	function: &mut syn::ImplItemFn,
+) -> Result<(), syn::Error> {
+	let Some(attr) = function
+		.attrs
+		.iter()
+		.find(|attr| attr.path().is_ident("seal"))
+		.cloned()
+	else {
+		return Ok(());
+	};
+
+	function
+		.attrs
+		.retain(|x| x != &attr);
+
+	let seal = seal_name(trait_ident);
+
+	function
+		.sig
+		.inputs
+		.push(parse_quote!(_token: #seal::Token));
+
+	let syn::Meta::List(list) = attr.meta else {
+		return Ok(());
+	};
+
+	let input = syn::parse::<FunctionArguments>(list.tokens.into())?;
+
+	if input.callable {
+		function.sig.ident = seal_function_name(&function.sig.ident);
+	}
+
+	Ok(())
 }
 
 /// Arguments accepted by `#[sealed]` attribute when placed on a trait
