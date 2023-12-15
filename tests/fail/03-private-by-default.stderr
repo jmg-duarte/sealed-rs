@@ -2,7 +2,10 @@ error[E0603]: module `__seal_t` is private
   --> tests/fail/03-private-by-default.rs:17:1
    |
 17 | #[sealed]
-   | ^^^^^^^^^ private module
+   | ^^^^^^^^^
+   | |
+   | private module
+   | trait `Sealed` is not publicly re-exported
    |
 note: the module `__seal_t` is defined here
   --> tests/fail/03-private-by-default.rs:8:17

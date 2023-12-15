@@ -1,5 +1,5 @@
 error: `pub` visibility breaks the seal as allows to use it outside its crate.
-Consider tightening the visibility (e.g. `pub(crate)`) if you actually need sealing.
+       Consider tightening the visibility (e.g. `pub(crate)`) if you actually need sealing.
  --> tests/fail/04-no-full-pub.rs:8:26
   |
 8 |                 #[sealed(pub)]
