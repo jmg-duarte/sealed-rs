@@ -1,0 +1,5 @@
+error: Sealing a function from implementation but allowing it to be called is already done by sealing the trait itself. If you want to seal this function, but not others, consider adding `partial` to the `sealed` attr on the trait: `#[sealed(partial)]`
+ --> tests/fail/08-partial-seal.rs:5:2
+  |
+5 |     #[seal(callable)]
+  |     ^^^^^^^^^^^^^^^^^

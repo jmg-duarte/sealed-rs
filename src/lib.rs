@@ -160,7 +160,35 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
 
 	for item in &mut item_trait.items {
 		if let syn::TraitItem::Fn(item) = item {
-			match parse_function_definition(trait_ident, item) {
+			let input = match parse_function_arguments(&item.attrs) {
+				Ok(input) => input,
+				Err(err) => {
+					return err
+						.into_compile_error()
+						.into()
+				}
+			};
+
+			let Some((attr, input)) = input else {
+				continue;
+			};
+
+			let attr = attr.clone();
+
+			item.attrs
+				.retain(|x| x != &attr);
+
+			match parse_function_definition(trait_ident, input, item) {
+				Ok(Some(_)) if !args.partial => {
+					return syn::Error::new(
+						attr.span(),
+						"Sealing a function from implementation but allowing it to be called is already done by sealing the trait itself. \
+							If you want to seal this function, but not others, \
+							consider adding `partial` to the `sealed` attr on the trait: `#[sealed(partial)]`"
+						)
+						.into_compile_error()
+						.into()
+				}
 				Ok(Some(wrapper)) => wrappers.push(wrapper.into()),
 				Ok(None) => {}
 				Err(err) => {
@@ -239,7 +267,18 @@ fn parse_sealed_impl(item_impl: &mut syn::ItemImpl) -> syn::Result<TokenStream2>
 
 	for item in &mut item_impl.items {
 		if let syn::ImplItem::Fn(item) = item {
-			parse_function_implementation(&ident, item)?;
+			let input = parse_function_arguments(&item.attrs)?;
+
+			let Some((attr, input)) = input else {
+				continue;
+			};
+
+			let attr = attr.clone();
+
+			item.attrs
+				.retain(|x| x != &attr);
+
+			parse_function_implementation(&ident, input, item)?;
 		}
 	}
 
@@ -265,25 +304,31 @@ fn seal_function_name<D: fmt::Display>(seal: D) -> syn::Ident {
 	format_ident!("_{}", &seal.to_string())
 }
 
+fn parse_function_arguments(
+	attrs: &[syn::Attribute],
+) -> Result<Option<(&syn::Attribute, FunctionArguments)>, syn::Error> {
+	for attr in attrs {
+		if attr.path().is_ident("seal") {
+			let value = if let syn::Meta::List(list) = &attr.meta {
+				syn::parse(list.tokens.clone().into())?
+			} else {
+				FunctionArguments::default()
+			};
+
+			return Ok(Some((attr, value)));
+		}
+	}
+
+	Ok(None)
+}
+
 /// Seal a specific function (to avoid people overwriting behaviour of
 /// specific functions, or even calling them)
 fn parse_function_definition(
 	trait_ident: &syn::Ident,
+	args: FunctionArguments,
 	function: &mut syn::TraitItemFn,
 ) -> Result<Option<syn::TraitItemFn>, syn::Error> {
-	let Some(attr) = function
-		.attrs
-		.iter()
-		.find(|attr| attr.path().is_ident("seal"))
-		.cloned()
-	else {
-		return Ok(None);
-	};
-
-	function
-		.attrs
-		.retain(|x| x != &attr);
-
 	let wrapper_sig = function.sig.clone();
 	let seal = seal_name(trait_ident);
 
@@ -292,15 +337,9 @@ fn parse_function_definition(
 		.inputs
 		.push(parse_quote!(_token: #seal::Token));
 
-	let syn::Meta::List(list) = attr.meta else {
-		return Ok(None);
-	};
-
-	let input = syn::parse::<FunctionArguments>(list.tokens.into())?;
-
 	let mut value = None;
 
-	if input.callable {
+	if args.callable {
 		function.sig.ident = seal_function_name(&function.sig.ident);
 		let inner_name = &function.sig.ident;
 
@@ -324,21 +363,9 @@ fn parse_function_definition(
 
 fn parse_function_implementation(
 	trait_ident: &syn::Ident,
+	args: FunctionArguments,
 	function: &mut syn::ImplItemFn,
 ) -> Result<(), syn::Error> {
-	let Some(attr) = function
-		.attrs
-		.iter()
-		.find(|attr| attr.path().is_ident("seal"))
-		.cloned()
-	else {
-		return Ok(());
-	};
-
-	function
-		.attrs
-		.retain(|x| x != &attr);
-
 	let seal = seal_name(trait_ident);
 
 	function
@@ -346,13 +373,7 @@ fn parse_function_implementation(
 		.inputs
 		.push(parse_quote!(_token: #seal::Token));
 
-	let syn::Meta::List(list) = attr.meta else {
-		return Ok(());
-	};
-
-	let input = syn::parse::<FunctionArguments>(list.tokens.into())?;
-
-	if input.callable {
+	if args.callable {
 		function.sig.ident = seal_function_name(&function.sig.ident);
 	}
 
@@ -371,6 +392,10 @@ struct TraitArguments {
 	///
 	/// Default is [`syn::Visibility::Inherited`].
 	visibility: syn::Visibility,
+
+	/// `partial` indicates that the trait itself should not be sealed, but some of the functions
+	/// are sealed
+	partial: bool,
 }
 
 impl Default for TraitArguments {
@@ -378,6 +403,7 @@ impl Default for TraitArguments {
 		Self {
 			erased: false,
 			visibility: syn::Visibility::Inherited,
+			partial: false,
 		}
 	}
 }
@@ -406,6 +432,11 @@ impl Parse for TraitArguments {
                              `pub(crate)`) if you actually need sealing.",
 						));
 					}
+				}
+
+				"partial" => {
+					syn::Ident::parse_any(input)?;
+					out.partial = true;
 				}
 
 				unknown => {

@@ -1,6 +1,6 @@
 use sealed::sealed;
 
-#[sealed]
+#[sealed(partial)]
 pub trait A {
 	#[seal(callable)]
 	fn has_default(
@@ -27,7 +27,7 @@ pub struct Impl;
 #[sealed]
 impl A for Impl {}
 
-#[sealed]
+#[sealed(partial)]
 pub trait B {
 	#[seal(callable)]
 	fn no_default(email: Email);
@@ -37,6 +37,19 @@ pub trait B {
 impl B for Impl {
 	#[seal(callable)]
 	fn no_default(_email: Email) {}
+}
+
+#[sealed]
+pub trait NoPartial {
+	#[seal]
+	fn has_default() {}
+
+	fn no_default();
+}
+
+#[sealed]
+impl NoPartial for Impl {
+	fn no_default() {}
 }
 
 fn main() {}
