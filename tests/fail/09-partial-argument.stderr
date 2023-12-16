@@ -1,0 +1,11 @@
+error: This trait is partially sealed, however none of its methods are implementable, so the `partial` argument does nothing.
+ --> tests/fail/09-partial-argument.rs:4:11
+  |
+4 | pub trait A {
+  |           ^
+
+error: This trait is partially sealed, however none of its methods are sealed, so it does nothing. Either seal a function or remove `partial` from the `sealed` attribute.
+  --> tests/fail/09-partial-argument.rs:10:11
+   |
+10 | pub trait B {
+   |           ^

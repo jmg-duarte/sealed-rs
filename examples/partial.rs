@@ -12,6 +12,8 @@ pub trait A {
 		}: User,
 	) {
 	}
+
+	fn not_sealed();
 }
 
 pub struct Email(String);
@@ -25,18 +27,24 @@ pub struct User {
 pub struct Impl;
 
 #[sealed]
-impl A for Impl {}
+impl A for Impl {
+	fn not_sealed() {}
+}
 
 #[sealed(partial)]
 pub trait B {
 	#[seal(callable)]
-	fn no_default(email: Email);
+	fn no_default(_email: Email) {}
+
+	fn hello();
 }
 
 #[sealed]
 impl B for Impl {
 	#[seal(callable)]
 	fn no_default(_email: Email) {}
+
+	fn hello() {}
 }
 
 #[sealed]

@@ -1,0 +1,5 @@
+error: This function is sealed from implementation, but it does not have a default implementation. This effectively seals the entire trait, which would be clearer to do by not having the trait seal be partial.
+ --> tests/fail/10-partial-without-default.rs:5:2
+  |
+5 |     #[seal]
+  |     ^^^^^^^

@@ -158,6 +158,9 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
 
 	let mut wrappers = Vec::<syn::TraitItem>::new();
 
+	let mut all_implementable = true;
+	let mut none_implementable = true;
+
 	for item in &mut item_trait.items {
 		if let syn::TraitItem::Fn(item) = item {
 			let input = match parse_function_arguments(&item.attrs) {
@@ -170,6 +173,7 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
 			};
 
 			let Some((attr, input)) = input else {
+				none_implementable = false;
 				continue;
 			};
 
@@ -189,8 +193,20 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
 						.into_compile_error()
 						.into()
 				}
-				Ok(Some(wrapper)) => wrappers.push(wrapper.into()),
-				Ok(None) => {}
+				Ok(_) if args.partial && item.default.is_none() => {
+					return syn::Error::new(
+						attr.span(), 
+						"This function is sealed from implementation, \
+							but it does not have a default implementation. \
+							This effectively seals the entire trait, \
+							which would be clearer to do by not having the trait seal be partial."
+						).into_compile_error().into()
+				}
+				Ok(Some(wrapper)) => {
+					all_implementable = false;
+					wrappers.push(wrapper.into())
+				},
+				Ok(None) => all_implementable = false,
 				Err(err) => {
 					return err
 						.into_compile_error()
@@ -198,6 +214,17 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
 				}
 			}
 		}
+	}
+
+	if args.partial && all_implementable {
+		return syn::Error::new(item_trait.ident.span(), "This trait is partially sealed, \
+			however none of its methods are sealed, so it does nothing. \
+			Either seal a function or remove `partial` from the `sealed` attribute.").to_compile_error().into();
+	}
+
+	if args.partial && none_implementable {
+		return syn::Error::new(item_trait.ident.span(), "This trait is partially sealed, \
+		however none of its methods are implementable, so the `partial` argument does nothing.").into_compile_error().into();
 	}
 
 	item_trait
