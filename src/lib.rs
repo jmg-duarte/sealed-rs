@@ -144,7 +144,7 @@ pub fn sealed(args: TokenStream, input: TokenStream) -> TokenStream {
     .into()
 }
 
-// Care for https://gist.github.com/Koxiaet/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
+// Care for https://gist.github.com/Kestrer/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
 fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> TokenStream2 {
     let trait_ident = &item_trait.ident.unraw();
     let trait_generics = &item_trait.generics;
