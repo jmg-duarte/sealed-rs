@@ -50,6 +50,9 @@ This is the list of arguments that can be used in a `#[sealed]` attribute:
 
 - `#[sealed(pub(crate))]` or `#[sealed(pub(in some::path))]`: allows to tune visibility of the generated sealing module (the default one is private). This useful when the trait and its impls are defined in different modules. For an example, see [`nesting`](examples/nesting.rs) example. **Notice**, that just `pub` is disallowed as breaks the whole idea of sealing.
 
+### Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 #### License
 
