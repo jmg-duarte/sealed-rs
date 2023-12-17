@@ -9,8 +9,9 @@ documentation = "https://docs.rs/sealed"
 categories = ["development-tools", "rust-patterns"]
 keywords = ["proc_macro", "sealed", "future-proofing"]
 readme = "README.md"
-edition = "2018"
+edition = "2021"
 exclude = ["images/*"]
+rust-version = "1.56.0"
 
 [workspace]
 members = ["demo"]
