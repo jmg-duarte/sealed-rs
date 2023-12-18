@@ -9,9 +9,6 @@ jobs:
   tests:
     name: Rust 1.56.0
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust: [stable]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.56.0
@@ -25,15 +22,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.56.0
         with:
           components: clippy
-      - run: cargo clippy -- -Dclippy::all
-      - run: cargo clippy --tests -- -Dclippy::all
-      - run: cargo clippy --examples -- -Dclippy::all
+      - run: cargo clippy -- --no-deps -Dclippy::all
+      - run: cargo clippy --tests -- --no-deps -Dclippy::all
+      - run: cargo clippy --examples -- --no-deps -Dclippy::all
 
   rustfmt:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.56.0
         with:
           components: rustfmt
