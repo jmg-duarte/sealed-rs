@@ -1,29 +1,29 @@
 pub mod inner {
-	use sealed::sealed;
+    use sealed::sealed;
 
-	#[sealed]
-	pub trait PartialSealed {
-		#[seal]
-		fn a();
+    #[sealed]
+    pub trait PartialSealed {
+        #[seal(uncallable)]
+        fn a();
 
-		fn b();
-	}
+        fn b();
+    }
 
-	pub struct A;
+    pub struct A;
 
-	#[sealed]
-	impl PartialSealed for A {
-		#[seal]
-		fn a() {}
+    #[sealed]
+    impl PartialSealed for A {
+        #[seal(uncallable)]
+        fn a() {}
 
-		fn b() {}
-	}
+        fn b() {}
+    }
 }
 
 use crate::inner::PartialSealed;
 
 fn main() {
-	inner::A::a();
-	inner::A::a(Token);
-	inner::A::b();
+    inner::A::a();
+    inner::A::a(Token);
+    inner::A::b();
 }

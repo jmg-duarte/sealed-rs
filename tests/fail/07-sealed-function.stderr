@@ -1,5 +1,5 @@
 error[E0425]: cannot find value `Token` in this scope
-  --> tests/fail/07-sealed-function.rs:27:14
+  --> tests/fail/07-sealed-function.rs:27:17
    |
 27 |     inner::A::a(Token);
    |                 ^^^^^ not found in this scope
@@ -10,7 +10,7 @@ help: consider importing this unit struct
    |
 
 error[E0061]: this function takes 1 argument but 0 arguments were supplied
-  --> tests/fail/07-sealed-function.rs:26:2
+  --> tests/fail/07-sealed-function.rs:26:5
    |
 26 |     inner::A::a();
    |     ^^^^^^^^^^^-- supplied 0 arguments
@@ -18,7 +18,7 @@ error[E0061]: this function takes 1 argument but 0 arguments were supplied
    |     expected 1 argument
    |
 note: associated function defined here
-  --> tests/fail/07-sealed-function.rs:7:6
+  --> tests/fail/07-sealed-function.rs:7:12
    |
 7  |         fn a();
    |            ^

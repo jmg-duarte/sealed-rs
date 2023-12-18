@@ -134,7 +134,7 @@ use syn::{
 #[proc_macro_attribute]
 pub fn sealed(args: TokenStream, input: TokenStream) -> TokenStream {
     match parse_macro_input!(input) {
-        syn::Item::Impl(mut item_impl) => parse_sealed_impl(&mut item_impl),
+        syn::Item::Impl(item_impl) => parse_sealed_impl(item_impl),
         syn::Item::Trait(item_trait) => {
             Ok(parse_sealed_trait(item_trait, parse_macro_input!(args)))
         }
@@ -163,7 +163,7 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
 
     for item in &mut item_trait.items {
         if let syn::TraitItem::Fn(item) = item {
-            let input = match parse_function_arguments(&item.attrs) {
+            let input = match parse_seal_attribute(&item.attrs) {
                 Ok(input) => input,
                 Err(err) => return err.into_compile_error().into(),
             };
@@ -269,7 +269,7 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
     }
 }
 
-fn parse_sealed_impl(item_impl: &mut syn::ItemImpl) -> syn::Result<TokenStream2> {
+fn parse_sealed_impl(mut item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> {
     let impl_trait = item_impl.trait_.as_ref().ok_or_else(|| {
         syn::Error::new_spanned(item_impl.clone(), "missing implementation trait")
     })?;
@@ -291,7 +291,7 @@ fn parse_sealed_impl(item_impl: &mut syn::ItemImpl) -> syn::Result<TokenStream2>
 
     for item in &mut item_impl.items {
         if let syn::ImplItem::Fn(item) = item {
-            let input = parse_function_arguments(&item.attrs)?;
+            let input = parse_seal_attribute(&item.attrs)?;
 
             let input = match input {
                 Some(value) => value,
@@ -321,15 +321,18 @@ fn seal_function_name<D: fmt::Display>(seal: D) -> syn::Ident {
     format_ident!("_{}", &seal.to_string())
 }
 
-fn parse_function_arguments(
+fn parse_seal_attribute(
     attrs: &[syn::Attribute],
-) -> Result<Option<FunctionArguments>, syn::Error> {
+) -> Result<Option<SealAttributeArguments>, syn::Error> {
     for attr in attrs {
         if attr.path().is_ident("seal") {
             let value = if let syn::Meta::List(list) = &attr.meta {
                 syn::parse(list.tokens.clone().into())?
             } else {
-                FunctionArguments::default()
+                return Err(syn::Error::new_spanned(
+                    attr,
+                    "Missing argument. Expected one of `callable` or `uncallable`.",
+                ));
             };
 
             return Ok(Some(value));
@@ -343,7 +346,7 @@ fn parse_function_arguments(
 /// specific functions, or even calling them)
 fn parse_function_definition(
     trait_ident: &syn::Ident,
-    args: FunctionArguments,
+    args: SealAttributeArguments,
     function: &mut syn::TraitItemFn,
 ) -> Result<Option<syn::TraitItemFn>, syn::Error> {
     let wrapper_sig = function.sig.clone();
@@ -374,7 +377,7 @@ fn parse_function_definition(
 
 fn parse_function_implementation(
     trait_ident: &syn::Ident,
-    args: FunctionArguments,
+    args: SealAttributeArguments,
     function: &mut syn::ImplItemFn,
 ) -> Result<(), syn::Error> {
     let seal = seal_name(trait_ident);
@@ -472,20 +475,20 @@ impl Parse for TraitArguments {
 }
 
 /// Arguments accepted by `#[seal]` attribute when placed on functions in a (partially) sealed trait
-struct FunctionArguments {
+struct SealAttributeArguments {
     /// Determines whether the sealed function is wrapped by a public function that is callable
     callable: bool,
 }
 
-impl Default for FunctionArguments {
+impl Default for SealAttributeArguments {
     fn default() -> Self {
-        FunctionArguments { callable: false }
+        SealAttributeArguments { callable: false }
     }
 }
 
-impl Parse for FunctionArguments {
+impl Parse for SealAttributeArguments {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let mut out = FunctionArguments::default();
+        let mut out = SealAttributeArguments::default();
         let ident = syn::Ident::parse(&input.fork())?;
 
         match ident.to_string().as_str() {
@@ -493,10 +496,19 @@ impl Parse for FunctionArguments {
                 syn::Ident::parse(input)?;
                 out.callable = true
             }
+
+            "uncallable" => {
+                syn::Ident::parse(input)?;
+                out.callable = false;
+            }
+
             unknown => {
                 return Err(syn::Error::new(
                     ident.span(),
-                    format!("unknown `{}` attribute argument", unknown),
+                    format!(
+                        "unknown `{}` attribute argument, expected `callable` or `uncallable`.",
+                        unknown
+                    ),
                 ))
             }
         }
