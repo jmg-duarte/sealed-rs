@@ -13,23 +13,18 @@ jobs:
       matrix:
         rust: [stable]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.56.0
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --workspace
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.56.0
+      - run: cargo test
 
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: dtolnay/rust-toolchain@clippy
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.56.0
+        with:
+          components: clippy
       - run: cargo clippy -- -Dclippy::all
       - run: cargo clippy --tests -- -Dclippy::all
       - run: cargo clippy --examples -- -Dclippy::all
@@ -39,15 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@1.56.0
         with:
-          toolchain: 1.56.0
-          override: true
-          profile: minimal
           components: rustfmt
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-      - name: Format tests
-        run: rustfmt --check tests/**/*.rs
+      - run: cargo fmt --all -- --check
+      - run: rustfmt --check tests/**/*.rs
