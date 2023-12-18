@@ -1,0 +1,27 @@
+error[E0425]: cannot find value `Token` in this scope
+  --> tests/fail/12-calling-sealed-function.rs:23:15
+   |
+23 |     B::sealed(Token);
+   |               ^^^^^ not found in this scope
+   |
+help: consider importing this unit struct
+   |
+13 | use crate::inner::__seal_a::Token;
+   |
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+  --> tests/fail/12-calling-sealed-function.rs:22:5
+   |
+22 |     B::sealed();
+   |     ^^^^^^^^^-- supplied 0 arguments
+   |     |
+   |     expected 1 argument
+   |
+note: associated function defined here
+  --> tests/fail/12-calling-sealed-function.rs:7:12
+   |
+4  | /     #[sealed(partial)]
+5  | |     pub trait A {
+6  | |         #[seal(uncallable)]
+7  | |         fn sealed() {}
+   | |____________^^^^^-

@@ -147,93 +147,23 @@ pub fn sealed(args: TokenStream, input: TokenStream) -> TokenStream {
 // Care for https://gist.github.com/Kestrer/8c05ebd4e0e9347eb05f265dfb7252e1#procedural-macros-support-renaming-the-crate
 fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> TokenStream2 {
     let trait_ident = &item_trait.ident.unraw();
-    let trait_generics = &item_trait.generics;
     let seal = seal_name(trait_ident);
     let vis = &args.visibility;
 
+    match handle_function_definitions(trait_ident, &args, &mut item_trait.items) {
+        Ok(wrappers) => item_trait.items.extend(wrappers),
+        Err(err) => return err.to_compile_error().into(),
+    }
+
+    let trait_generics = &item_trait.generics;
     let (_, ty_generics, where_clause) = trait_generics.split_for_impl();
-    item_trait
-        .supertraits
-        .push(parse_quote!( #seal::Sealed #ty_generics ));
 
-    let mut wrappers = Vec::<syn::TraitItem>::new();
-
-    let mut all_implementable = true;
-    let mut none_implementable = true;
-
-    for item in &mut item_trait.items {
-        if let syn::TraitItem::Fn(item) = item {
-            let input = match parse_seal_attribute(&item.attrs) {
-                Ok(input) => input,
-                Err(err) => return err.into_compile_error().into(),
-            };
-
-            let input = match input {
-                Some(value) => value,
-                None => {
-                    none_implementable = false;
-                    continue;
-                }
-            };
-
-            item.attrs.retain(|x| !x.path().is_ident("seal"));
-
-            match parse_function_definition(trait_ident, input, item) {
-				Ok(Some(_)) if !args.partial => {
-					return syn::Error::new(
-						item.sig.ident.span(),
-						"Sealing a function from implementation but allowing it to be called is already done by sealing the trait itself. \
-							If you want to seal this function, but not others, \
-							consider adding `partial` to the `sealed` attr on the trait: `#[sealed(partial)]`"
-						)
-						.into_compile_error()
-						.into()
-				}
-				Ok(_) if args.partial && item.default.is_none() => {
-					return syn::Error::new(
-						item.sig.ident.span(),
-						"This function is sealed from implementation, \
-							but it does not have a default implementation. \
-							This effectively seals the entire trait, \
-							which would be clearer to do by not having the trait seal be partial."
-						).into_compile_error().into()
-				}
-				Ok(Some(wrapper)) => {
-					all_implementable = false;
-					wrappers.push(wrapper.into())
-				},
-				Ok(None) => all_implementable = false,
-				Err(err) => {
-					return err
-						.into_compile_error()
-						.into()
-				}
-			}
-        }
+    // A partial seal does not seal the trait, just some of the methods.
+    if !args.partial {
+        item_trait
+            .supertraits
+            .push(parse_quote!( #seal::Sealed #ty_generics ));
     }
-
-    if args.partial && all_implementable {
-        return syn::Error::new(
-            item_trait.ident.span(),
-            "This trait is partially sealed, \
-			however none of its methods are sealed, so it does nothing. \
-			Either seal a function or remove `partial` from the `sealed` attribute.",
-        )
-        .to_compile_error()
-        .into();
-    }
-
-    if args.partial && none_implementable {
-        return syn::Error::new(
-            item_trait.ident.span(),
-            "This trait is partially sealed, \
-		however none of its methods are implementable, so the `partial` argument does nothing.",
-        )
-        .into_compile_error()
-        .into();
-    }
-
-    item_trait.items.extend(wrappers);
 
     let mod_code = if args.erased {
         let lifetimes = trait_generics.lifetimes();
@@ -289,20 +219,7 @@ fn parse_sealed_impl(mut item_impl: syn::ItemImpl) -> syn::Result<TokenStream2> 
     // the bounds may break in the `#seal` submodule.
     let (trait_generics, _, where_clauses) = item_impl.generics.split_for_impl();
 
-    for item in &mut item_impl.items {
-        if let syn::ImplItem::Fn(item) = item {
-            let input = parse_seal_attribute(&item.attrs)?;
-
-            let input = match input {
-                Some(value) => value,
-                None => continue,
-            };
-
-            item.attrs.retain(|x| !x.path().is_ident("seal"));
-
-            parse_function_implementation(&ident, input, item)?;
-        }
-    }
+    handle_function_implementations(&ident, &mut item_impl.items)?;
 
     Ok(quote! {
         #[automatically_derived]
@@ -342,9 +259,84 @@ fn parse_seal_attribute(
     Ok(None)
 }
 
+fn handle_function_definitions(
+    trait_ident: &syn::Ident,
+    args: &TraitArguments,
+    item_trait: &mut [syn::TraitItem],
+) -> syn::Result<Vec<syn::TraitItem>> {
+    let mut wrappers = Vec::<syn::TraitItem>::new();
+
+    let mut all_implementable = true;
+    let mut none_implementable = true;
+
+    for item in item_trait {
+        if let syn::TraitItem::Fn(item) = item {
+            let input = match parse_seal_attribute(&item.attrs) {
+                Ok(input) => input,
+                Err(err) => return Err(err),
+            };
+
+            let input = match input {
+                Some(value) => value,
+                None => {
+                    none_implementable = false;
+                    continue;
+                }
+            };
+
+            item.attrs.retain(|x| !x.path().is_ident("seal"));
+
+            match handle_function_definition(trait_ident, input, item) {
+                Ok(Some(_)) if !args.partial => {
+                    return Err(syn::Error::new(
+						item.sig.ident.span(),
+						"Sealing a function from implementation but allowing it to be called is already done by sealing the trait itself. \
+							If you want to seal this function, but not others, \
+							consider adding `partial` to the `sealed` attr on the trait: `#[sealed(partial)]`"
+						));
+                }
+                Ok(_) if args.partial && item.default.is_none() => {
+                    return Err(syn::Error::new(
+                        item.sig.ident.span(),
+                        "This function is sealed from implementation, \
+							but it does not have a default implementation. \
+							This effectively seals the entire trait, \
+							which would be clearer to do by not having the trait seal be partial.",
+                    ));
+                }
+                Ok(Some(wrapper)) => {
+                    all_implementable = false;
+                    wrappers.push(wrapper.into())
+                }
+                Ok(None) => all_implementable = false,
+                Err(err) => return Err(err),
+            }
+        }
+    }
+
+    if args.partial && all_implementable {
+        return Err(syn::Error::new(
+            trait_ident.span(),
+            "This trait is partially sealed, \
+			however none of its methods are sealed, so it does nothing. \
+			Either seal a function or remove `partial` from the `sealed` attribute.",
+        ));
+    }
+
+    if args.partial && none_implementable {
+        return Err(syn::Error::new(
+            trait_ident.span(),
+            "This trait is partially sealed, \
+		however none of its methods are implementable, so the `partial` argument does nothing.",
+        ));
+    }
+
+    Ok(wrappers)
+}
+
 /// Seal a specific function (to avoid people overwriting behaviour of
 /// specific functions, or even calling them)
-fn parse_function_definition(
+fn handle_function_definition(
     trait_ident: &syn::Ident,
     args: SealAttributeArguments,
     function: &mut syn::TraitItemFn,
@@ -375,7 +367,29 @@ fn parse_function_definition(
     Ok(value)
 }
 
-fn parse_function_implementation(
+fn handle_function_implementations(
+    ident: &syn::Ident,
+    items: &mut [syn::ImplItem],
+) -> syn::Result<()> {
+    for item in items {
+        if let syn::ImplItem::Fn(item) = item {
+            let input = parse_seal_attribute(&item.attrs)?;
+
+            let input = match input {
+                Some(value) => value,
+                None => continue,
+            };
+
+            item.attrs.retain(|x| !x.path().is_ident("seal"));
+
+            handle_function_implementation(&ident, input, item)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn handle_function_implementation(
     trait_ident: &syn::Ident,
     args: SealAttributeArguments,
     function: &mut syn::ImplItemFn,

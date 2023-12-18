@@ -1,0 +1,38 @@
+error[E0412]: cannot find type `Token` in this scope
+  --> tests/fail/11-implementing-sealed-function.rs:25:23
+   |
+25 |     fn sealed(_token: Token) {}
+   |                       ^^^^^ not found in this scope
+   |
+help: consider importing one of these items
+   |
+13 | use crate::inner::__seal_a::Token;
+   |
+13 | use syn::token::Token;
+   |
+
+error[E0050]: method `sealed` has 0 parameters but the declaration in trait `A::sealed` has 1
+  --> tests/fail/11-implementing-sealed-function.rs:18:5
+   |
+4  |     #[sealed(partial)]
+   |     ------------------ trait requires 1 parameter
+...
+18 |     fn sealed() {}
+   |     ^^^^^^^^^^^ expected 1 parameter, found 0
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+  --> tests/fail/11-implementing-sealed-function.rs:30:5
+   |
+30 |     B::sealed();
+   |     ^^^^^^^^^-- supplied 0 arguments
+   |     |
+   |     expected 1 argument
+   |
+note: associated function defined here
+  --> tests/fail/11-implementing-sealed-function.rs:7:12
+   |
+4  | /     #[sealed(partial)]
+5  | |     pub trait A {
+6  | |         #[seal(uncallable)]
+7  | |         fn sealed() {}
+   | |____________^^^^^-
