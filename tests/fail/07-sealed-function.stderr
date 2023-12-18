@@ -4,25 +4,21 @@ error[E0425]: cannot find value `Token` in this scope
 27 |     inner::A::a(Token);
    |                 ^^^^^ not found in this scope
    |
-note: unit struct `crate::inner::__seal_partial_sealed::Token` exists but is inaccessible
-  --> tests/fail/07-sealed-function.rs:4:2
+help: consider importing this unit struct
    |
-4  |     #[sealed]
-   |     ^^^^^^^^^ not accessible
-   = note: this error originates in the attribute macro `sealed` (in Nightly builds, run with -Z macro-backtrace for more info)
+23 | use crate::inner::__seal_partial_sealed::Token;
+   |
 
 error[E0061]: this function takes 1 argument but 0 arguments were supplied
   --> tests/fail/07-sealed-function.rs:26:2
    |
 26 |     inner::A::a();
-   |     ^^^^^^^^^^^-- an argument of type `Token` is missing
+   |     ^^^^^^^^^^^-- supplied 0 arguments
+   |     |
+   |     expected 1 argument
    |
 note: associated function defined here
   --> tests/fail/07-sealed-function.rs:7:6
    |
 7  |         fn a();
    |            ^
-help: provide the argument
-   |
-26 |     inner::A::a(/* Token */);
-   |                ~~~~~~~~~~~~~
