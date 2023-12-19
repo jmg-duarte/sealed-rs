@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-use sealed::sealed;
-
-#[sealed]
+#[sealed::sealed]
 pub trait DroneState {}
 
 pub struct Drone<State>
@@ -15,15 +13,15 @@ where
 }
 
 pub struct Idle;
-#[sealed]
+#[sealed::sealed]
 impl DroneState for Idle {}
 
 pub struct Hovering;
-#[sealed]
+#[sealed::sealed]
 impl DroneState for Hovering {}
 
 pub struct Flying;
-#[sealed]
+#[sealed::sealed]
 impl DroneState for Flying {}
 
 impl Drone<Idle> {
