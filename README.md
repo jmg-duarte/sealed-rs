@@ -4,7 +4,7 @@
 
 [<img alt="" src="https://img.shields.io/badge/docs.rs-sealed-success?style=flat-square">](https://docs.rs/sealed)
 [<img alt="" src="https://img.shields.io/crates/v/sealed?style=flat-square">](https://crates.io/crates/sealed)
-<img alt="MSRV 1.56.0" src="https://img.shields.io/badge/msrv-1.56.0-blue?style=flat-square">
+<img alt="MSRV 1.61.0" src="https://img.shields.io/badge/msrv-1.61.0-blue?style=flat-square">
 
 This crate provides a convenient and simple way to implement the sealed trait pattern,
 as described in the Rust API Guidelines [[1](https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed)].
