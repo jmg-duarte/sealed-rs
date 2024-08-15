@@ -119,7 +119,6 @@
 
 use std::fmt;
 
-use heck::ToSnakeCase as _;
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::{format_ident, quote};
@@ -216,9 +215,29 @@ fn parse_sealed_impl(item_impl: &syn::ItemImpl) -> syn::Result<TokenStream2> {
     })
 }
 
+/// Convert a string into snake case.
+///
+/// Stolen't from <https://github.com/jmg-duarte/sealed-rs/pull/6#pullrequestreview-653837118>
+fn to_snake_case(s: &'_ str) -> String {
+    let mut ret = String::with_capacity(s.len());
+    let mut first = true;
+    s.bytes().for_each(|c| {
+        if c.is_ascii_uppercase() {
+            if !first {
+                ret.push('_');
+            }
+            ret.push(c.to_ascii_lowercase() as char);
+        } else {
+            ret.push(c as char);
+        }
+        first = false;
+    });
+    ret
+}
+
 /// Constructs [`syn::Ident`] of a sealing module name.
 fn seal_name<D: fmt::Display>(seal: D) -> syn::Ident {
-    format_ident!("__seal_{}", &seal.to_string().to_snake_case())
+    format_ident!("__seal_{}", to_snake_case(&seal.to_string()))
 }
 
 /// Arguments accepted by `#[sealed]` attribute when placed on a trait
