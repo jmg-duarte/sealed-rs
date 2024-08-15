@@ -1,6 +1,6 @@
 # Contributing to `sealed`
 
-- Ensure you're using Rust 1.56.0 to develop and test.
+- Ensure you're using Rust 1.61.0 to develop and test.
   This is required because we test macro error messages, which are not stable across
   compiler versions. Pinning the version everyone uses when developing `sealed` was the
   solution I found. If you know of a better solution,
