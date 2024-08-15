@@ -148,13 +148,11 @@ pub fn sealed(args: TokenStream, input: TokenStream) -> TokenStream {
 fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> TokenStream2 {
     let trait_ident = &item_trait.ident.unraw();
     let trait_generics = &item_trait.generics;
+    let trait_supertraits = &item_trait.supertraits;
     let seal = seal_name(trait_ident);
     let vis = &args.visibility;
 
     let (_, ty_generics, where_clause) = trait_generics.split_for_impl();
-    item_trait
-        .supertraits
-        .push(parse_quote!( #seal::Sealed #ty_generics ));
 
     let mod_code = if args.erased {
         let lifetimes = trait_generics.lifetimes();
@@ -174,10 +172,13 @@ fn parse_sealed_trait(mut item_trait: syn::ItemTrait, args: TraitArguments) -> T
         // to supertraits in the middle). So we output them separately.
         quote! {
             use super::*;
-            pub trait Sealed #trait_generics #where_clause {}
+            pub trait Sealed #trait_generics : #trait_supertraits #where_clause {}
         }
     };
 
+    item_trait
+        .supertraits
+        .push(parse_quote!( #seal::Sealed #ty_generics ));
     quote! {
         #[automatically_derived]
         #vis mod #seal {
