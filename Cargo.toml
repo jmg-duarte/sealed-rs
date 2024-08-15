@@ -1,6 +1,6 @@
 [package]
 name = "sealed"
-version = "0.5.0"
+version = "0.6.0-rc1"
 authors = ["José Duarte <jmg.duarte@campus.fct.unl.pt>"]
 license = "MIT OR Apache-2.0"
 description = "Macro for sealing traits and structures"
