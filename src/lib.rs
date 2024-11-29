@@ -9,7 +9,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! sealed = "0.5"
+//! sealed = "0.6"
 //! ```
 //!
 //! ## Example
