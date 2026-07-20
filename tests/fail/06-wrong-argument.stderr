@@ -4,6 +4,12 @@ error: unknown `erased` attribute argument
 3 | #[sealed(erased)]
   |          ^^^^^^
 
+error[E0405]: cannot find trait `T` in this scope
+ --> tests/fail/06-wrong-argument.rs:9:6
+  |
+9 | impl T for A {}
+  |      ^ not found in this scope
+
 error[E0433]: failed to resolve: use of undeclared crate or module `__seal_t`
  --> tests/fail/06-wrong-argument.rs:8:1
   |
@@ -11,9 +17,3 @@ error[E0433]: failed to resolve: use of undeclared crate or module `__seal_t`
   | ^^^^^^^^^ use of undeclared crate or module `__seal_t`
   |
   = note: this error originates in the attribute macro `sealed` (in Nightly builds, run with -Z macro-backtrace for more info)
-
-error[E0405]: cannot find trait `T` in this scope
- --> tests/fail/06-wrong-argument.rs:9:6
-  |
-9 | impl T for A {}
-  |      ^ not found in this scope
