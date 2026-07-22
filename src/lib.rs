@@ -193,11 +193,11 @@ fn parse_sealed_impl(item_impl: &syn::ItemImpl) -> syn::Result<TokenStream2> {
         .as_ref()
         .ok_or_else(|| syn::Error::new_spanned(item_impl, "missing implementation trait"))?;
 
-    let mut sealed_path = impl_trait.1.segments.clone();
+    let mut sealed_path = impl_trait.0.segments.clone();
 
     // since `impl for ...` is not allowed, this path will *always* have at least length 1
     // thus both `first` and `last` are safe to unwrap
-    let syn::PathSegment { ident, arguments } = sealed_path.pop().unwrap().into_value();
+    let syn::PathSegment { ident, arguments } = sealed_path.pop().unwrap();
     let seal = seal_name(ident.unraw());
     sealed_path.push(parse_quote!( #seal ));
     sealed_path.push(parse_quote!(Sealed));
